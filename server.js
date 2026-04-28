@@ -38,13 +38,8 @@ app.use(cors({
      origin: [
           "http://localhost:5173",
           "http://localhost:5174",
-          "https://kreeya.netlify.app",
-          "http://10.200.248.198:5174",
           "http://localhost:4173",
-          "https://kreeyadesign.com",
-          "https://www.kreeyadesign.com",
-          "https://api.kreeyadesign.com",
-          "https://kreeya-admin.netlify.app"
+          "https://shikssha.netlify.app",
      ]
 }));
 
