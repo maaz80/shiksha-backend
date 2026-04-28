@@ -27,6 +27,7 @@ const allowedOrigins = [
      "http://localhost:5174",
      "http://localhost:4173",
      "https://shikssha.netlify.app",
+     "https://shikksha.netlify.app",
      ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(",").map((origin) => origin.trim()) : []),
 ];
 
