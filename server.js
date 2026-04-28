@@ -43,31 +43,7 @@ app.use(cors({
      ]
 }));
 
-// Cache headers for static assets
-app.use('/assets', express.static(path.join(__dirname, 'dist/assets'), {
-     maxAge: '365d',
-     setHeaders: (res, filepath) => {
-          if (filepath.match(/\.(jpg|jpeg|png|gif|webp|svg|ico)$/)) {
-               res.setHeader('Cache-Control', 'public, max-age=31536000');
-          }
-          else if (filepath.match(/\.(css|js)$/)) {
-               res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-          }
-          else if (filepath.match(/\.(woff|woff2|ttf|eot)$/)) {
-               res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-          }
-     }
-}));
 
-// Serve other static files
-app.use(express.static(path.join(__dirname, 'dist'), {
-     maxAge: '365d',
-     setHeaders: (res, filepath) => {
-          if (filepath.match(/\.html$/)) {
-               res.setHeader('Cache-Control', 'public, max-age=3600');
-          }
-     }
-}));
 
 // API auth guard for admin write access
 app.use("/api", requireAdminForWrites);
@@ -94,13 +70,6 @@ app.use((req, res, next) => {
      if (req.path.match(/\.(css|js|webp|png|jpg|jpeg|gif|ico|svg|mp4|woff|woff2|ttf|eot)$/)) {
           return next();
      }
-
-     // For all other routes, serve index.html (SPA catch-all)
-     res.sendFile(path.join(__dirname, 'dist', 'index.html'), {
-          headers: {
-               'Cache-Control': 'public, max-age=3600'
-          }
-     });
 });
 
 // 404 handler for unmatched routes
