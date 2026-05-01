@@ -14,6 +14,11 @@ import blogRoutes from "./routes/blogRoutes.js";
 import courseRoutes from "./routes/courseRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
+import locationHeroRoutes from "./routes/locationHeroRoutes.js";
+import locationPageRoutes from "./routes/locationPageRoutes.js";
+import serviceHeroRoutes from "./routes/serviceHeroRoutes.js";
+import servicePageRoutes from "./routes/servicePageRoutes.js";
+import bookingRoute from "./routes/bookingRoute.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -25,7 +30,9 @@ app.disable("x-powered-by");
 const allowedOrigins = [
      "http://localhost:5173",
      "http://localhost:5174",
+     "http://localhost:5175",
      "http://localhost:4173",
+     "http://10.145.7.198:5173",
      "https://shikssha.netlify.app",
      "https://shikksha.netlify.app",
      ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(",").map((origin) => origin.trim()) : []),
@@ -63,6 +70,11 @@ app.use("/api", userRoutes);
 app.use("/api", adminRoutes);
 app.use("/api", blogRoutes);
 app.use("/api", courseRoutes);
+app.use("/api", locationHeroRoutes);
+app.use("/api", locationPageRoutes);
+app.use("/api", serviceHeroRoutes);
+app.use("/api", servicePageRoutes);
+app.use("/api", bookingRoute);
 
 // Health check
 app.get("/", (req, res) => {
