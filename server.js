@@ -16,8 +16,6 @@ import adminRoutes from "./routes/adminRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import locationHeroRoutes from "./routes/locationHeroRoutes.js";
 import locationPageRoutes from "./routes/locationPageRoutes.js";
-import serviceHeroRoutes from "./routes/serviceHeroRoutes.js";
-import servicePageRoutes from "./routes/servicePageRoutes.js";
 import bookingRoute from "./routes/bookingRoute.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -72,8 +70,6 @@ app.use("/api", blogRoutes);
 app.use("/api", courseRoutes);
 app.use("/api", locationHeroRoutes);
 app.use("/api", locationPageRoutes);
-app.use("/api", serviceHeroRoutes);
-app.use("/api", servicePageRoutes);
 app.use("/api", bookingRoute);
 
 // Health check
