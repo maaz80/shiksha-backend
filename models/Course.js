@@ -17,6 +17,12 @@ const courseSchema = new mongoose.Schema({
      title: String,
      category: String,
      name: String,
+     slug: {
+          type: String,
+          unique: true,
+          sparse: true,
+          required: true
+     },
 
      courseLength: String, // "2 Weeks"
      students: Number,

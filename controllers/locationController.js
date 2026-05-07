@@ -1,0 +1,318 @@
+import Location from "../models/Location.js";
+import mongoose from "mongoose";
+
+const slugifyText = (value = "") =>
+  value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    || "item";
+
+const isObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
+
+const resolveLocationQuery = (locationIdentifier) => (
+  isObjectId(locationIdentifier)
+    ? { _id: locationIdentifier }
+    : { slug: locationIdentifier }
+);
+
+const buildSlugRegex = (baseSlug) => new RegExp(`^${baseSlug}(?:_\\d+)?$`);
+
+const makeUniqueFromSet = (baseSlug, existingSlugs) => {
+  if (!existingSlugs.has(baseSlug)) return baseSlug;
+
+  let counter = 2;
+  let nextSlug = `${baseSlug}_${counter}`;
+  while (existingSlugs.has(nextSlug)) {
+    counter += 1;
+    nextSlug = `${baseSlug}_${counter}`;
+  }
+  return nextSlug;
+};
+
+const generateUniqueLocationSlug = async (title, excludeId = null) => {
+  const baseSlug = slugifyText(title || "location");
+  const slugRegex = buildSlugRegex(baseSlug);
+  const existing = await Location.find({ slug: slugRegex }).select("slug");
+
+  const existingSlugs = new Set(
+    existing
+      .filter((doc) => !excludeId || String(doc._id) !== String(excludeId))
+      .map((doc) => doc.slug)
+  );
+
+  return makeUniqueFromSet(baseSlug, existingSlugs);
+};
+
+const generateUniqueItemSlug = (locationDoc, title, excludeItemId = null) => {
+  const baseSlug = slugifyText(title || "item");
+  const existingSlugs = new Set(
+    (locationDoc.items || [])
+      .filter((item) => !excludeItemId || String(item._id) !== String(excludeItemId))
+      .map((item) => item.slug)
+      .filter(Boolean)
+  );
+
+  return makeUniqueFromSet(baseSlug, existingSlugs);
+};
+
+const findItemIndex = (locationDoc, itemIdentifier) => (
+  (locationDoc.items || []).findIndex((item) => (
+    String(item._id) === String(itemIdentifier) || item.slug === itemIdentifier
+  ))
+);
+
+const ensureSlugsForLocation = async (locationDoc) => {
+  let changed = false;
+
+  if (!locationDoc.slug) {
+    locationDoc.slug = await generateUniqueLocationSlug(locationDoc.title, locationDoc._id);
+    changed = true;
+  }
+
+  const existingItemSlugs = new Set();
+  (locationDoc.items || []).forEach((item) => {
+    if (!item.slug || existingItemSlugs.has(item.slug)) {
+      item.slug = makeUniqueFromSet(slugifyText(item.title || "item"), existingItemSlugs);
+      changed = true;
+    }
+    existingItemSlugs.add(item.slug);
+  });
+
+  if (changed) {
+    await locationDoc.save();
+  }
+
+  return locationDoc;
+};
+
+
+// ================= GET ALL SERVICES =================
+export const getLocations = async (req, res) => {
+  try {
+    const data = await Location.find().sort({ createdAt: -1 });
+    const withSlugs = await Promise.all(data.map((location) => ensureSlugsForLocation(location)));
+    res.json(withSlugs);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
+// ================= GET SINGLE SERVICE =================
+export const getLocationById = async (req, res) => {
+  try {
+    const data = await Location.findOne(resolveLocationQuery(req.params.id));
+    if (!data) {
+      return res.status(404).json({ error: "Location not found" });
+    }
+    await ensureSlugsForLocation(data);
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const getLocationBySlug = async (req, res) => {
+  try {
+    const data = await Location.findOne({ slug: req.params.slug });
+    if (!data) {
+      return res.status(404).json({ error: "Location not found" });
+    }
+    await ensureSlugsForLocation(data);
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
+// ================= CREATE SERVICE =================
+export const createLocation = async (req, res) => {
+  try {
+    const parsed = JSON.parse(req.body.data || "{}");
+    parsed.slug = await generateUniqueLocationSlug(parsed.title);
+    if (req.file?.path) {
+      parsed.image = req.file.path;
+    }
+
+    const location = new Location(parsed);
+    await location.save();
+
+    res.status(201).json(location);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
+// ================= UPDATE SERVICE =================
+export const updateLocation = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const parsed = JSON.parse(req.body.data || "{}");
+    const existing = await Location.findOne(resolveLocationQuery(id));
+
+    if (!existing) {
+      return res.status(404).json({ error: "Location not found" });
+    }
+
+    if (parsed.title && parsed.title !== existing.title) {
+      parsed.slug = await generateUniqueLocationSlug(parsed.title, existing._id);
+    }
+
+    if (req.file?.path) {
+      parsed.image = req.file.path;
+    }
+
+    const updated = await Location.findByIdAndUpdate(
+      existing._id,
+      { $set: parsed },
+      { new: true }
+    );
+
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
+// ================= DELETE SERVICE =================
+export const deleteLocation = async (req, res) => {
+  try {
+    const existing = await Location.findOne(resolveLocationQuery(req.params.id));
+    if (!existing) {
+      return res.status(404).json({ error: "Location not found" });
+    }
+    await Location.findByIdAndDelete(existing._id);
+    res.json({ message: "Deleted" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
+// ================= ADD ITEM =================
+export const addItem = async (req, res) => {
+  try {
+    const { locationId } = req.params;
+    const item = JSON.parse(req.body.data || "{}");
+    const location = await Location.findOne(resolveLocationQuery(locationId));
+    if (!location) {
+      return res.status(404).json({ error: "Location not found" });
+    }
+
+    item.slug = generateUniqueItemSlug(location, item.title);
+    location.items.push(item);
+    await location.save();
+
+    res.json(location);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+export const getItem = async (req, res) => {
+  try {
+    const { locationId, itemId } = req.params;
+    const location = await Location.findOne(resolveLocationQuery(locationId));
+    if (!location) {
+      return res.status(404).json({ error: "Location not found" });
+    }
+
+    await ensureSlugsForLocation(location);
+    const itemIndex = findItemIndex(location, itemId);
+    if (itemIndex === -1) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+
+    res.json(location.items[itemIndex]);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
+// ================= UPDATE ITEM =================
+export const updateItem = async (req, res) => {
+  try {
+    const { locationId, itemId } = req.params;
+
+    const parsed = JSON.parse(req.body.data || "{}");
+    const files = (req.files || []).filter((file) => file.fieldname === "locationImages");
+    const indexes = req.body.locationImageIndex || [];
+    const indexArray = Array.isArray(indexes) ? indexes : [indexes];
+
+    const location = await Location.findOne(resolveLocationQuery(locationId));
+    if (!location) {
+      return res.status(404).json({ error: "Location not found" });
+    }
+
+    const itemIndex = findItemIndex(location, itemId);
+    if (itemIndex === -1) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+
+    const currentItem = location.items[itemIndex];
+
+    if (parsed?.page?.location?.cards) {
+      parsed.page.location.cards = parsed.page.location.cards.map((card) => ({
+        ...card,
+        image: card.image || "",
+      }));
+
+      files.forEach((file, i) => {
+        const index = Number(indexArray[i]);
+        if (parsed.page.location.cards[index]) {
+          parsed.page.location.cards[index].image = file.path;
+        }
+      });
+    }
+
+    const mergedItem = {
+      ...currentItem.toObject(),
+      ...parsed,
+      _id: currentItem._id,
+    };
+
+    if (parsed.title && parsed.title !== currentItem.title) {
+      mergedItem.slug = generateUniqueItemSlug(location, parsed.title, currentItem._id);
+    } else {
+      mergedItem.slug = currentItem.slug || generateUniqueItemSlug(location, currentItem.title, currentItem._id);
+    }
+
+    location.items[itemIndex] = mergedItem;
+    await location.save();
+
+    res.json(location);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
+// ================= DELETE ITEM =================
+export const deleteItem = async (req, res) => {
+  try {
+    const { locationId, itemId } = req.params;
+    const location = await Location.findOne(resolveLocationQuery(locationId));
+
+    if (!location) {
+      return res.status(404).json({ error: "Location not found" });
+    }
+
+    const itemIndex = findItemIndex(location, itemId);
+    if (itemIndex === -1) {
+      return res.status(404).json({ error: "Item not found" });
+    }
+
+    location.items.splice(itemIndex, 1);
+    await location.save();
+
+    res.json(location);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};

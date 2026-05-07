@@ -14,9 +14,8 @@ import blogRoutes from "./routes/blogRoutes.js";
 import courseRoutes from "./routes/courseRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
-import locationHeroRoutes from "./routes/locationHeroRoutes.js";
-import locationPageRoutes from "./routes/locationPageRoutes.js";
 import bookingRoute from "./routes/bookingRoute.js";
+import locationRoute from "./routes/locationRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -68,9 +67,8 @@ app.use("/api", userRoutes);
 app.use("/api", adminRoutes);
 app.use("/api", blogRoutes);
 app.use("/api", courseRoutes);
-app.use("/api", locationHeroRoutes);
-app.use("/api", locationPageRoutes);
 app.use("/api", bookingRoute);
+app.use("/api", locationRoute);
 
 // Health check
 app.get("/", (req, res) => {

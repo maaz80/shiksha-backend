@@ -14,7 +14,7 @@ import upload from "../middleware/multer.js";
 router.post("/courses", upload.single("image"), createCourse);
 router.post("/courses/video", upload.single("video"), uploadCourseVideo);
 router.get("/courses", getCourses);
-router.get("/courses/:id", getCourse);
+router.get("/courses/:slug", getCourse);
 router.put("/courses/:id", upload.single("image"), updateCourse);
 router.delete("/courses/:id", deleteCourse);
 
