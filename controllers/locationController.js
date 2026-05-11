@@ -5,9 +5,9 @@ const slugifyText = (value = "") =>
   value
     .toLowerCase()
     .trim()
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "")
-    || "item";
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+  || "item";
 
 const isObjectId = (value) => mongoose.Types.ObjectId.isValid(value);
 
@@ -45,6 +45,15 @@ const generateUniqueLocationSlug = async (title, excludeId = null) => {
   return makeUniqueFromSet(baseSlug, existingSlugs);
 };
 
+const ensureLocationSlugAvailable = async (slug, excludeId = null) => {
+  const existing = await Location.findOne({ slug }).select("_id");
+  if (existing && (!excludeId || String(existing._id) !== String(excludeId))) {
+    const error = new Error("Location slug already exists");
+    error.statusCode = 400;
+    throw error;
+  }
+};
+
 const generateUniqueItemSlug = (locationDoc, title, excludeItemId = null) => {
   const baseSlug = slugifyText(title || "item");
   const existingSlugs = new Set(
@@ -55,6 +64,27 @@ const generateUniqueItemSlug = (locationDoc, title, excludeItemId = null) => {
   );
 
   return makeUniqueFromSet(baseSlug, existingSlugs);
+};
+
+const ensureItemSlugAvailable = (locationDoc, slug, excludeItemId = null) => {
+  const duplicate = (locationDoc.items || []).some((item) => (
+    item.slug === slug && (!excludeItemId || String(item._id) !== String(excludeItemId))
+  ));
+
+  if (duplicate) {
+    const error = new Error("Item slug already exists in this location");
+    error.statusCode = 400;
+    throw error;
+  }
+};
+
+const cleanLocationPayload = (payload = {}) => {
+  const cleaned = {};
+
+  if (payload.title !== undefined) cleaned.title = payload.title;
+  if (payload.slug?.trim()) cleaned.slug = payload.slug;
+
+  return cleaned;
 };
 
 const findItemIndex = (locationDoc, itemIdentifier) => (
@@ -95,7 +125,7 @@ export const getLocations = async (req, res) => {
     const withSlugs = await Promise.all(data.map((location) => ensureSlugsForLocation(location)));
     res.json(withSlugs);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.statusCode || 500).json({ error: err.message });
   }
 };
 
@@ -110,7 +140,7 @@ export const getLocationById = async (req, res) => {
     await ensureSlugsForLocation(data);
     res.json(data);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.statusCode || 500).json({ error: err.message });
   }
 };
 
@@ -123,7 +153,7 @@ export const getLocationBySlug = async (req, res) => {
     await ensureSlugsForLocation(data);
     res.json(data);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.statusCode || 500).json({ error: err.message });
   }
 };
 
@@ -131,10 +161,12 @@ export const getLocationBySlug = async (req, res) => {
 // ================= CREATE SERVICE =================
 export const createLocation = async (req, res) => {
   try {
-    const parsed = JSON.parse(req.body.data || "{}");
-    parsed.slug = await generateUniqueLocationSlug(parsed.title);
-    if (req.file?.path) {
-      parsed.image = req.file.path;
+    const parsed = cleanLocationPayload(JSON.parse(req.body.data || "{}"));
+    if (parsed.slug) {
+      parsed.slug = slugifyText(parsed.slug);
+      await ensureLocationSlugAvailable(parsed.slug);
+    } else {
+      parsed.slug = await generateUniqueLocationSlug(parsed.title);
     }
 
     const location = new Location(parsed);
@@ -142,7 +174,7 @@ export const createLocation = async (req, res) => {
 
     res.status(201).json(location);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.statusCode || 500).json({ error: err.message });
   }
 };
 
@@ -151,19 +183,17 @@ export const createLocation = async (req, res) => {
 export const updateLocation = async (req, res) => {
   try {
     const { id } = req.params;
-    const parsed = JSON.parse(req.body.data || "{}");
+    const parsed = cleanLocationPayload(JSON.parse(req.body.data || "{}"));
     const existing = await Location.findOne(resolveLocationQuery(id));
 
     if (!existing) {
       return res.status(404).json({ error: "Location not found" });
     }
 
-    if (parsed.title && parsed.title !== existing.title) {
+    if (parsed.slug) {
+      parsed.slug = slugifyText(parsed.slug);
+    } else if (!existing.slug || (parsed.title && parsed.title !== existing.title)) {
       parsed.slug = await generateUniqueLocationSlug(parsed.title, existing._id);
-    }
-
-    if (req.file?.path) {
-      parsed.image = req.file.path;
     }
 
     const updated = await Location.findByIdAndUpdate(
@@ -174,7 +204,7 @@ export const updateLocation = async (req, res) => {
 
     res.json(updated);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.statusCode || 500).json({ error: err.message });
   }
 };
 
@@ -189,7 +219,7 @@ export const deleteLocation = async (req, res) => {
     await Location.findByIdAndDelete(existing._id);
     res.json({ message: "Deleted" });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.statusCode || 500).json({ error: err.message });
   }
 };
 
@@ -204,13 +234,19 @@ export const addItem = async (req, res) => {
       return res.status(404).json({ error: "Location not found" });
     }
 
-    item.slug = generateUniqueItemSlug(location, item.title);
+    if (item.slug) {
+      item.slug = slugifyText(item.slug);
+      ensureItemSlugAvailable(location, item.slug);
+    } else {
+      item.slug = generateUniqueItemSlug(location, item.title);
+    }
+
     location.items.push(item);
     await location.save();
 
     res.json(location);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.statusCode || 500).json({ error: err.message });
   }
 };
 
@@ -230,7 +266,7 @@ export const getItem = async (req, res) => {
 
     res.json(location.items[itemIndex]);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.statusCode || 500).json({ error: err.message });
   }
 };
 
@@ -277,8 +313,11 @@ export const updateItem = async (req, res) => {
       _id: currentItem._id,
     };
 
-    if (parsed.title && parsed.title !== currentItem.title) {
-      mergedItem.slug = generateUniqueItemSlug(location, parsed.title, currentItem._id);
+    if (parsed.slug) {
+      mergedItem.slug = slugifyText(parsed.slug);
+      ensureItemSlugAvailable(location, mergedItem.slug, currentItem._id);
+    } else if (parsed.title && parsed.title !== currentItem.title) {
+      mergedItem.slug = currentItem.slug || generateUniqueItemSlug(location, parsed.title, currentItem._id);
     } else {
       mergedItem.slug = currentItem.slug || generateUniqueItemSlug(location, currentItem.title, currentItem._id);
     }
@@ -288,7 +327,7 @@ export const updateItem = async (req, res) => {
 
     res.json(location);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(err.statusCode || 500).json({ error: err.message });
   }
 };
 

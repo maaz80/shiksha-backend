@@ -31,12 +31,19 @@ const pageSchema = new mongoose.Schema({
   why: {
     title: String,
     content: String,
-  }
+  },
+  faq: [
+    {
+      ques: String,
+      ans: String,
+    }
+  ]
 }, { _id: false });
 
 const itemSchema = new mongoose.Schema({
   title: String,
   slug: String,
+  description: String,
 
   hero: heroSchema,
 
@@ -50,8 +57,6 @@ const locationSchema = new mongoose.Schema({
     unique: true,
     sparse: true
   },
-  description: String,
-  image: String,
 
   items: [itemSchema]
 

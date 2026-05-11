@@ -21,10 +21,10 @@ const router = express.Router();
 router.get("/locations", getLocations);
 router.get("/locations/slug/:slug", getLocationBySlug);
 router.get("/locations/:id", getLocationById);
-router.post("/locations", upload.single("image"), createLocation);
-router.put("/locations/:id", upload.single("image"), updateLocation);
+router.post("/locations", upload.none(), createLocation);
+router.put("/locations/:id", upload.none(), updateLocation);
 router.delete("/locations/:id", deleteLocation);
-router.put("/locations/slug/:slug", upload.single("image"), updateLocation);
+router.put("/locations/slug/:slug", upload.none(), updateLocation);
 router.delete("/locations/slug/:slug", deleteLocation);
 
 
