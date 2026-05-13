@@ -44,6 +44,7 @@ const itemSchema = new mongoose.Schema({
   title: String,
   slug: String,
   description: String,
+  keywords: mongoose.Schema.Types.Mixed,
 
   hero: heroSchema,
 

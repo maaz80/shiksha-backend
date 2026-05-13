@@ -103,6 +103,7 @@ const ensureSlugsForLocation = async (locationDoc) => {
 
   const existingItemSlugs = new Set();
   (locationDoc.items || []).forEach((item) => {
+
     if (!item.slug || existingItemSlugs.has(item.slug)) {
       item.slug = makeUniqueFromSet(slugifyText(item.title || "item"), existingItemSlugs);
       changed = true;
@@ -229,6 +230,7 @@ export const addItem = async (req, res) => {
   try {
     const { locationId } = req.params;
     const item = JSON.parse(req.body.data || "{}");
+    item.keywords = item.keywords?.trim() || "";
     const location = await Location.findOne(resolveLocationQuery(locationId));
     if (!location) {
       return res.status(404).json({ error: "Location not found" });
@@ -312,6 +314,10 @@ export const updateItem = async (req, res) => {
       ...parsed,
       _id: currentItem._id,
     };
+
+    if (parsed.keywords !== undefined) {
+      mergedItem.keywords = parsed.keywords?.trim() || "";
+    }
 
     if (parsed.slug) {
       mergedItem.slug = slugifyText(parsed.slug);

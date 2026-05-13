@@ -50,6 +50,7 @@ export const createBlog = async (req, res) => {
 
           // 🔥 IMPORTANT FIX
           const seoTitle = req.body.seoTitle;
+          const seoKeywords = req.body.seoKeywords;
           const seoDescription = req.body.seoDescription;
 
           const imageUrl = req.file?.path || "";
@@ -75,7 +76,8 @@ export const createBlog = async (req, res) => {
 
                // 🔥 SAFE SAVE
                seoTitle: seoTitle || title,
-               seoDescription: seoDescription || content.slice(0, 150)
+               seoDescription: seoDescription || content.slice(0, 150),
+               seoKeywords: seoKeywords || ""
           });
 
           await blog.save();
@@ -114,6 +116,10 @@ export const updateBlog = async (req, res) => {
                     req.body.seoDescription || req.body.content.slice(0, 150);
           }
 
+          if (req.body.seoKeywords) {
+               updateData.seoKeywords = req.body.seoKeywords;
+          }
+          
           if (req.file) {
                updateData.image = req.file.path;
           }
