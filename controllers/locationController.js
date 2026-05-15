@@ -87,6 +87,18 @@ const cleanLocationPayload = (payload = {}) => {
   return cleaned;
 };
 
+const normalizeKeywords = (value) => {
+  if (Array.isArray(value)) {
+    return value.map((keyword) => String(keyword)).join(", ");
+  }
+
+  if (typeof value === "string") {
+    return value;
+  }
+
+  return "";
+};
+
 const findItemIndex = (locationDoc, itemIdentifier) => (
   (locationDoc.items || []).findIndex((item) => (
     String(item._id) === String(itemIdentifier) || item.slug === itemIdentifier
@@ -103,9 +115,13 @@ const ensureSlugsForLocation = async (locationDoc) => {
 
   const existingItemSlugs = new Set();
   (locationDoc.items || []).forEach((item) => {
+    if (Array.isArray(item.keywords)) {
+      item.keywords = normalizeKeywords(item.keywords);
+      changed = true;
+    }
 
     if (!item.slug || existingItemSlugs.has(item.slug)) {
-      item.slug = makeUniqueFromSet(slugifyText(item.title || "item"), existingItemSlugs);
+      item.slug = makeUniqueFromSet(slugifyText(item.seoTitle || item.title || "item"), existingItemSlugs);
       changed = true;
     }
     existingItemSlugs.add(item.slug);
@@ -230,7 +246,7 @@ export const addItem = async (req, res) => {
   try {
     const { locationId } = req.params;
     const item = JSON.parse(req.body.data || "{}");
-    item.keywords = item.keywords?.trim() || "";
+    item.keywords = normalizeKeywords(item.keywords);
     const location = await Location.findOne(resolveLocationQuery(locationId));
     if (!location) {
       return res.status(404).json({ error: "Location not found" });
@@ -240,7 +256,8 @@ export const addItem = async (req, res) => {
       item.slug = slugifyText(item.slug);
       ensureItemSlugAvailable(location, item.slug);
     } else {
-      item.slug = generateUniqueItemSlug(location, item.title);
+      const slugSource = item.seoTitle?.trim() ? item.seoTitle : item.title;
+      item.slug = generateUniqueItemSlug(location, slugSource || "item");
     }
 
     location.items.push(item);
@@ -316,16 +333,18 @@ export const updateItem = async (req, res) => {
     };
 
     if (parsed.keywords !== undefined) {
-      mergedItem.keywords = parsed.keywords?.trim() || "";
+      mergedItem.keywords = normalizeKeywords(parsed.keywords);
     }
 
     if (parsed.slug) {
       mergedItem.slug = slugifyText(parsed.slug);
       ensureItemSlugAvailable(location, mergedItem.slug, currentItem._id);
+    } else if (parsed.seoTitle !== undefined && parsed.seoTitle !== currentItem.seoTitle) {
+      mergedItem.slug = currentItem.slug || generateUniqueItemSlug(location, parsed.seoTitle, currentItem._id);
     } else if (parsed.title && parsed.title !== currentItem.title) {
       mergedItem.slug = currentItem.slug || generateUniqueItemSlug(location, parsed.title, currentItem._id);
     } else {
-      mergedItem.slug = currentItem.slug || generateUniqueItemSlug(location, currentItem.title, currentItem._id);
+      mergedItem.slug = currentItem.slug || generateUniqueItemSlug(location, currentItem.seoTitle || currentItem.title, currentItem._id);
     }
 
     location.items[itemIndex] = mergedItem;

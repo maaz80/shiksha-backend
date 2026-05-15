@@ -16,7 +16,7 @@ import adminRoutes from "./routes/adminRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import bookingRoute from "./routes/bookingRoute.js";
 import locationRoute from "./routes/locationRoutes.js";
-
+import pageSEORoutes from "./routes/pageSEORoutes.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -69,7 +69,7 @@ app.use("/api", blogRoutes);
 app.use("/api", courseRoutes);
 app.use("/api", bookingRoute);
 app.use("/api", locationRoute);
-
+app.use("/api", pageSEORoutes);
 // Health check
 app.get("/", (req, res) => {
      res.send("Server Working");

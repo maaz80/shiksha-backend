@@ -110,6 +110,9 @@ export const updateBlog = async (req, res) => {
           if (req.body.title) {
                updateData.seoTitle = req.body.seoTitle || req.body.title;
           }
+          if (req.body.slug) {
+               updateData.slug = req.body.slug;
+          }
 
           if (req.body.content) {
                updateData.seoDescription =

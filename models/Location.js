@@ -43,6 +43,7 @@ const pageSchema = new mongoose.Schema({
 const itemSchema = new mongoose.Schema({
   title: String,
   slug: String,
+  seoTitle: String,
   description: String,
   keywords: mongoose.Schema.Types.Mixed,
 
