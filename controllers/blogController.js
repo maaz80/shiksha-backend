@@ -5,8 +5,8 @@ const createSlug = (title) => {
      return title
           .toLowerCase()
           .trim()
-          .replace(/[^a-z0-9\s]/g, "")
-          .replace(/\s+/g, "_");
+          .replace(/[^a-z0-9\s-]/g, "") // Keep alphanumeric, spaces, and existing hyphens
+          .replace(/\s+/g, "-");
 };
 
 // ✅ GET ALL BLOGS

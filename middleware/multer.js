@@ -2,7 +2,7 @@ import multer from "multer";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import cloudinary from "../config/cloudinary.js";
 
-const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
+const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
 
 const allowedMimeTypes = new Set([
      "image/jpeg",
@@ -25,10 +25,23 @@ const allowedExtensions = new Set([
 
 const storage = new CloudinaryStorage({
      cloudinary,
-     params: {
-          folder: "kreeya_media",
-          resource_type: "auto",
-          allowed_formats: ["jpg", "png", "jpeg", "webp", "mp4", "mov", "webm"]
+     params: async (req, file) => {
+          const originalName = file.originalname || "image";
+          const nameWithoutExtension = originalName.substring(0, originalName.lastIndexOf('.')) || originalName;
+
+          const seoFriendlyName = nameWithoutExtension
+               .toLowerCase()
+               .replace(/[^a-z0-9]+/g, "-")
+               .replace(/^-+|-+$/g, "");
+
+          // const uniqueSuffix = Math.random().toString(36).substring(2, 5);
+
+          return {
+               folder: "kreeya_media",
+               public_id: `${seoFriendlyName}`,
+               resource_type: "auto",
+               allowed_formats: ["jpg", "png", "jpeg", "webp", "mp4", "mov", "webm"]
+          };
      }
 });
 
@@ -47,7 +60,7 @@ const upload = multer({
      fileFilter,
      limits: {
           fileSize: MAX_FILE_SIZE_BYTES,
-          files: 5
+          files: 8
      }
 });
 
