@@ -147,7 +147,7 @@ export const deleteCourse = async (req, res) => {
 export const addCourseReview = async (req, res) => {
      try {
           const { id } = req.params;
-          const { name, rating, text } = req.body;
+          const { name, role, rating, text } = req.body;
 
           if (!name || !rating || !text) {
                return res.status(400).json({ error: "Please fill in all fields" });
@@ -160,7 +160,7 @@ export const addCourseReview = async (req, res) => {
 
           const image = req.file ? req.file.path : undefined;
 
-          course.reviews.push({ name, rating: Number(rating), text, image });
+          course.reviews.push({ name, role, rating: Number(rating), text, image });
           await course.save();
 
           res.status(201).json(course);
@@ -203,6 +203,7 @@ export const getAllReviews = async (req, res) => {
                               text: review.text,
                               image: review.image,
                               date: review.date,
+                              role: review.role || "",
                               courseName: course.name || course.title || "Student"
                          });
                     });

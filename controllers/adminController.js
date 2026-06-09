@@ -29,6 +29,6 @@ export const loginAdmin = (req, res) => {
 
      res.json({
           token,
-          expiresIn: 8 * 60 * 60
+          expiresIn: 30 * 24 * 60 * 60
      });
 };

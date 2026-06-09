@@ -20,6 +20,8 @@ import pageSEORoutes from "./routes/pageSEORoutes.js";
 import faqRoutes from "./routes/faqRoutes.js";
 import footerRoutes from "./routes/footerRoutes.js";
 import imageRoutes from "./routes/imageRoutes.js";
+import homeRoutes from "./routes/homeRoutes.js";
+import aboutRoutes from "./routes/aboutRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -77,6 +79,8 @@ app.use("/api", pageSEORoutes);
 app.use("/api", faqRoutes);
 app.use("/api", footerRoutes);
 app.use("/api", imageRoutes);
+app.use("/api", homeRoutes);
+app.use("/api", aboutRoutes);
 
 // Health check
 app.get("/", (req, res) => {

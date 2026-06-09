@@ -53,6 +53,7 @@ const courseSchema = new mongoose.Schema({
      },
      reviews: [{
           name: String,
+          role: String,
           rating: Number,
           text: String,
           image: String,
