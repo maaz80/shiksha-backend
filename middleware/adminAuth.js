@@ -5,6 +5,8 @@ const PUBLIC_WRITE_PATHS = new Set([
      "/auth/signup",
      "/auth/login",
      "/auth/logout",
+     "/auth/forgot-password",
+     "/auth/reset-password",
      "/send-otp",
      "/submit-booking",
      "/enroll",

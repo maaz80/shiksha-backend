@@ -27,19 +27,19 @@ export const generateAndSendOTP = async (phone, email) => {
           const mailOptions = {
                from: process.env.EMAIL_FROM,
                to: email,
-               subject: "Your OTP for Kreeya Booking",
+               subject: "Your OTP for Shiksha Design",
                html: `
                     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
-                         <h2 style="color: #f97316; text-align: center;">Kreeya Booking Verification</h2>
+                         <h2 style="color: #0071E5; text-align: center;">Shiksha Design Verification</h2>
                          <p style="font-size: 16px; color: #333;">Hello,</p>
-                         <p style="font-size: 16px; color: #333;">Your OTP for booking verification is:</p>
-                         <div style="background-color: #f7f7f7; padding: 15px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 5px; border-radius: 8px; margin: 20px 0;">
+                         <p style="font-size: 16px; color: #333;">Your OTP for verification is:</p>
+                         <div style="background-color: #f7f7f7; padding: 15px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 5px; border-radius: 8px; margin: 20px 0; color: #0071E5;">
                               ${otp}
                          </div>
                          <p style="font-size: 14px; color: #666;">This OTP is valid for 10 minutes.</p>
                          <p style="font-size: 14px; color: #666;">If you didn't request this, please ignore this email.</p>
                          <hr style="margin: 20px 0;" />
-                         <p style="font-size: 12px; color: #999; text-align: center;">© Kreeya - Intelligent Design Solutions</p>
+                         <p style="font-size: 12px; color: #999; text-align: center;">©Shiksha Design</p>
                     </div>
                `
           };

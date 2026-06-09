@@ -17,6 +17,10 @@ import userRoutes from "./routes/userRoutes.js";
 import bookingRoute from "./routes/bookingRoute.js";
 import locationRoute from "./routes/locationRoutes.js";
 import pageSEORoutes from "./routes/pageSEORoutes.js";
+import faqRoutes from "./routes/faqRoutes.js";
+import footerRoutes from "./routes/footerRoutes.js";
+import imageRoutes from "./routes/imageRoutes.js";
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -70,6 +74,10 @@ app.use("/api", courseRoutes);
 app.use("/api", bookingRoute);
 app.use("/api", locationRoute);
 app.use("/api", pageSEORoutes);
+app.use("/api", faqRoutes);
+app.use("/api", footerRoutes);
+app.use("/api", imageRoutes);
+
 // Health check
 app.get("/", (req, res) => {
      res.send("Server Working");

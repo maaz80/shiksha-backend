@@ -37,6 +37,27 @@ const courseSchema = new mongoose.Schema({
 
      sections: [sectionSchema], // curriculum
 
+     alt: {
+          type: String,
+          default: ""
+     },
+     seoTitle: {
+          type: String,
+          trim: true,
+          default: ""
+     },
+     seoDescription: {
+          type: String,
+          trim: true,
+          default: ""
+     },
+     reviews: [{
+          name: String,
+          rating: Number,
+          text: String,
+          image: String,
+          date: { type: Date, default: Date.now }
+     }],
 }, { timestamps: true });
 
 const Course = mongoose.model("Course", courseSchema);

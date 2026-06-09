@@ -121,7 +121,7 @@ const ensureSlugsForLocation = async (locationDoc) => {
     }
 
     if (!item.slug || existingItemSlugs.has(item.slug)) {
-      item.slug = makeUniqueFromSet(slugifyText(item.seoTitle || item.title || "item"), existingItemSlugs);
+      item.slug = makeUniqueFromSet(slugifyText(item.title || item.seoTitle || "item"), existingItemSlugs);
       changed = true;
     }
     existingItemSlugs.add(item.slug);
@@ -256,7 +256,7 @@ export const addItem = async (req, res) => {
       item.slug = slugifyText(item.slug);
       ensureItemSlugAvailable(location, item.slug);
     } else {
-      const slugSource = item.seoTitle?.trim() ? item.seoTitle : item.title;
+      const slugSource = item.title?.trim() ? item.title : item.seoTitle;
       item.slug = generateUniqueItemSlug(location, slugSource || "item");
     }
 
@@ -339,12 +339,12 @@ export const updateItem = async (req, res) => {
     if (parsed.slug) {
       mergedItem.slug = slugifyText(parsed.slug);
       ensureItemSlugAvailable(location, mergedItem.slug, currentItem._id);
-    } else if (parsed.seoTitle !== undefined && parsed.seoTitle !== currentItem.seoTitle) {
-      mergedItem.slug = currentItem.slug || generateUniqueItemSlug(location, parsed.seoTitle, currentItem._id);
     } else if (parsed.title && parsed.title !== currentItem.title) {
       mergedItem.slug = currentItem.slug || generateUniqueItemSlug(location, parsed.title, currentItem._id);
+    } else if (parsed.seoTitle !== undefined && parsed.seoTitle !== currentItem.seoTitle) {
+      mergedItem.slug = currentItem.slug || generateUniqueItemSlug(location, parsed.seoTitle, currentItem._id);
     } else {
-      mergedItem.slug = currentItem.slug || generateUniqueItemSlug(location, currentItem.seoTitle || currentItem.title, currentItem._id);
+      mergedItem.slug = currentItem.slug || generateUniqueItemSlug(location, currentItem.title || currentItem.seoTitle || "item", currentItem._id);
     }
 
     location.items[itemIndex] = mergedItem;

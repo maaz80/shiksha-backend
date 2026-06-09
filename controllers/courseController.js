@@ -142,3 +142,78 @@ export const deleteCourse = async (req, res) => {
      await Course.findByIdAndDelete(req.params.id);
      res.json({ success: true });
 };
+
+// ADD REVIEW
+export const addCourseReview = async (req, res) => {
+     try {
+          const { id } = req.params;
+          const { name, rating, text } = req.body;
+
+          if (!name || !rating || !text) {
+               return res.status(400).json({ error: "Please fill in all fields" });
+          }
+
+          const course = await Course.findById(id);
+          if (!course) {
+               return res.status(404).json({ error: "Course not found" });
+          }
+
+          const image = req.file ? req.file.path : undefined;
+
+          course.reviews.push({ name, rating: Number(rating), text, image });
+          await course.save();
+
+          res.status(201).json(course);
+     } catch (err) {
+          res.status(500).json({ error: err.message });
+     }
+};
+
+// DELETE REVIEW
+export const deleteCourseReview = async (req, res) => {
+     try {
+          const { id, reviewId } = req.params;
+
+          const course = await Course.findById(id);
+          if (!course) {
+               return res.status(404).json({ error: "Course not found" });
+          }
+
+          course.reviews = course.reviews.filter((r) => String(r._id) !== String(reviewId));
+          await course.save();
+
+          res.json(course);
+     } catch (err) {
+          res.status(500).json({ error: err.message });
+     }
+};
+
+export const getAllReviews = async (req, res) => {
+     try {
+          const courses = await Course.find({}, { name: 1, title: 1, reviews: 1 });
+          const allReviews = [];
+
+          courses.forEach((course) => {
+               if (course.reviews && course.reviews.length > 0) {
+                    course.reviews.forEach((review) => {
+                         allReviews.push({
+                              _id: review._id,
+                              name: review.name,
+                              rating: review.rating,
+                              text: review.text,
+                              image: review.image,
+                              date: review.date,
+                              courseName: course.name || course.title || "Student"
+                         });
+                    });
+               }
+          });
+
+          // Sort by date descending (latest reviews first)
+          allReviews.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+          res.json(allReviews);
+     } catch (err) {
+          res.status(500).json({ error: err.message });
+     }
+};
