@@ -77,7 +77,7 @@ export const createAdminToken = () => {
      const header = base64UrlEncode({ alg: "HS256", typ: "JWT" });
      const payload = base64UrlEncode({
           role: "admin",
-          exp: Math.floor(Date.now() / 1000) + 8 * 60 * 60
+          exp: Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60
      });
      const body = `${header}.${payload}`;
      const signature = signTokenPart(body, adminApiKey);
