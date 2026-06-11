@@ -1,4 +1,4 @@
-import Blog from "../models/Blog.js";
+import Blog, { BlogPage } from "../models/Blog.js";
 
 // slug generator
 const createSlug = (title) => {
@@ -145,6 +145,36 @@ export const deleteBlog = async (req, res) => {
      try {
           await Blog.findByIdAndDelete(req.params.id);
           res.json({ message: "Deleted" });
+     } catch (err) {
+          res.status(500).json({ error: err.message });
+     }
+};
+
+// ✅ GET BLOG PAGE DATA (TITLES)
+export const getBlogPageData = async (req, res) => {
+     try {
+          const pageData = await BlogPage.findOne();
+          if (!pageData) {
+               return res.json({
+                    blogstitle: "Our Blogs",
+                    featuredblogstitle: "Featured Blogs"
+               });
+          }
+          res.json(pageData);
+     } catch (err) {
+          res.status(500).json({ error: err.message });
+     }
+};
+
+// ✅ UPDATE BLOG PAGE DATA (TITLES)
+export const updateBlogPageData = async (req, res) => {
+     try {
+          const pageData = await BlogPage.findOneAndUpdate({}, req.body, {
+               upsert: true,
+               new: true,
+               setDefaultsOnInsert: true
+          });
+          res.json(pageData);
      } catch (err) {
           res.status(500).json({ error: err.message });
      }

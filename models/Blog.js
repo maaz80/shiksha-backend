@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 
+
 const blogSchema = new mongoose.Schema({
 
      title: {
@@ -59,7 +60,13 @@ const blogSchema = new mongoose.Schema({
      },
 
 }, { timestamps: true });
+const blogPageSchema = new mongoose.Schema({
+     blogstitle: String,
+     featuredblogstitle: String
+});
 
 const Blog = mongoose.model("Blog", blogSchema);
+const BlogPage = mongoose.model("BlogPage", blogPageSchema);
 
+export { BlogPage };
 export default Blog;

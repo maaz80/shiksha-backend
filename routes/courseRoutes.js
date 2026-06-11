@@ -9,10 +9,15 @@ import {
      uploadCourseVideo,
      addCourseReview,
      deleteCourseReview,
-     getAllReviews
+     getAllReviews,
+     getCoursePageData,
+     updateCoursePageData
 } from "../controllers/courseController.js";
 
 import upload from "../middleware/multer.js";
+
+router.get("/coursepage-data", getCoursePageData);
+router.put("/coursepage-data", updateCoursePageData);
 
 router.post("/courses", upload.single("image"), createCourse);
 router.post("/courses/video", upload.single("video"), uploadCourseVideo);

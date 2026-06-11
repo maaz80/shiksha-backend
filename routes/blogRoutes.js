@@ -6,10 +6,15 @@ import {
      createBlog,
      updateBlog,
      deleteBlog,
-     getBlogBySlug
+     getBlogBySlug,
+     getBlogPageData,
+     updateBlogPageData
 } from "../controllers/blogController.js";
 
 const router = express.Router();
+
+router.get("/blogpage-data", getBlogPageData);
+router.put("/blogpage-data", updateBlogPageData);
 
 router.get("/blogs", getBlogs);
 router.get("/blogs/:slug", getBlogBySlug);

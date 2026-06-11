@@ -9,7 +9,7 @@ export const getFaq = async (req, res) => {
           const data = await Faq.findOne({ pageSlug: pageId });
 
           if (!data) {
-               return res.json({ faq: [] });
+               return res.json({ title: "FAQ", faq: [] });
           }
 
           res.json(data);
@@ -22,17 +22,21 @@ export const getFaq = async (req, res) => {
 export const updateFaq = async (req, res) => {
      try {
           const { pageId } = req.params;
-          const { faq } = req.body;
+          const { faq, title } = req.body;
 
           let data = await Faq.findOne({ pageSlug: pageId });
 
           if (data) {
                data.faq = faq;
+               if (title !== undefined) {
+                    data.title = title;
+               }
                await data.save();
           } else {
                data = await Faq.create({
                     pageSlug: pageId,
-                    faq
+                    faq,
+                    title: title || "FAQ"
                });
           }
 

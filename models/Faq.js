@@ -6,6 +6,10 @@ const faqSchema = new mongoose.Schema({
           required: true,
           unique: true
      },
+     title: {
+          type: String,
+          default: "FAQ"
+     },
      faq: [
           {
                ques: String,

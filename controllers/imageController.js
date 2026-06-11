@@ -1,56 +1,33 @@
 import Image from "../models/Image.js";
 
-export const uploadImage = async (req, res) => {
-
-     try {
-
-          const image = new Image({
-               title: req.body.title,
-               image: req.file.path
-          });
-
-          await image.save();
-
-          res.json(image);
-
-     } catch (err) {
-
-          res.status(500).json({ error: err.message });
-
-     }
-
-};
-
-
-
+// Get Images Config
 export const getImages = async (req, res) => {
-
-     const images = await Image.find().sort({ createdAt: -1 });
-
-     res.json(images);
-
+     try {
+          let config = await Image.findOne();
+          if (!config) {
+               config = await Image.create({
+                    startTitle: "Companies",
+                    endTitle: "That Our Students Work At",
+                    description: "Our students have gone on to build successful careers with leading organizations across diverse industries, showcasing the skills, knowledge, and confidence they gained through our programs.",
+                    images: []
+               });
+          }
+          res.json(config);
+     } catch (err) {
+          res.status(500).json({ error: err.message });
+     }
 };
 
-
-
-export const deleteImage = async (req, res) => {
-
-     await Image.findByIdAndDelete(req.params.id);
-
-     res.json({ message: "Deleted" });
-
-};
-
-
-
-export const updateImage = async (req, res) => {
-
-     const updated = await Image.findByIdAndUpdate(
-          req.params.id,
-          { title: req.body.title },
-          { new: true }
-     );
-
-     res.json(updated);
-
+// Update Images Config
+export const updateImagesConfig = async (req, res) => {
+     try {
+          const config = await Image.findOneAndUpdate(
+               {},
+               req.body,
+               { new: true, upsert: true, setDefaultsOnInsert: true }
+          );
+          res.json(config);
+     } catch (err) {
+          res.status(500).json({ error: err.message });
+     }
 };

@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import Course from "../models/Course.js";
+import Course, { CoursePage } from "../models/Course.js";
 
 const createSlug = (title) => {
      return title
@@ -214,6 +214,35 @@ export const getAllReviews = async (req, res) => {
           allReviews.sort((a, b) => new Date(b.date) - new Date(a.date));
 
           res.json(allReviews);
+     } catch (err) {
+          res.status(500).json({ error: err.message });
+     }
+};
+
+// ✅ GET COURSE PAGE DATA (TITLES)
+export const getCoursePageData = async (req, res) => {
+     try {
+          const pageData = await CoursePage.findOne();
+          if (!pageData) {
+               return res.json({
+                    coursestitle: "All Courses"
+               });
+          }
+          res.json(pageData);
+     } catch (err) {
+          res.status(500).json({ error: err.message });
+     }
+};
+
+// ✅ UPDATE COURSE PAGE DATA (TITLES)
+export const updateCoursePageData = async (req, res) => {
+     try {
+          const pageData = await CoursePage.findOneAndUpdate({}, req.body, {
+               upsert: true,
+               new: true,
+               setDefaultsOnInsert: true
+          });
+          res.json(pageData);
      } catch (err) {
           res.status(500).json({ error: err.message });
      }

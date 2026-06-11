@@ -23,6 +23,9 @@ import imageRoutes from "./routes/imageRoutes.js";
 import homeRoutes from "./routes/homeRoutes.js";
 import aboutRoutes from "./routes/aboutRoutes.js";
 import navbarRoutes from "./routes/navbarRoutes.js";
+import policyRoutes from "./routes/policyRoutes.js";
+import contactRoutes from "./routes/contactRoutes.js";
+import upload from "./middleware/multer.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -83,6 +86,19 @@ app.use("/api", imageRoutes);
 app.use("/api", homeRoutes);
 app.use("/api", aboutRoutes);
 app.use("/api", navbarRoutes);
+app.use("/api", policyRoutes);
+app.use("/api", contactRoutes);
+
+app.post("/api/upload", upload.single("image"), (req, res) => {
+     try {
+          if (!req.file) {
+               return res.status(400).json({ error: "No file uploaded" });
+          }
+          res.json({ url: req.file.path });
+     } catch (err) {
+          res.status(500).json({ error: err.message });
+     }
+});
 
 // Health check
 app.get("/", (req, res) => {

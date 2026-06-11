@@ -6,9 +6,10 @@ export const getAboutData = async (req, res) => {
           const aboutData = await About.findOne();
           if (!aboutData) {
                return res.json({
-                    hero: { startTitle: "", midTitle: "", endTitle: "", description: "" },
+                    hero: { startTitle: "", midTitle: "", endTitle: "", description: "", image: "" },
                     shikshadetails: [],
-                    ourvalues: []
+                    ourvalues: { title: "", values: [] },
+                    team: { title: "", members: [] }
                });
           }
           res.json(aboutData);

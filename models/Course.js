@@ -61,6 +61,12 @@ const courseSchema = new mongoose.Schema({
      }],
 }, { timestamps: true });
 
-const Course = mongoose.model("Course", courseSchema);
+const coursePageSchema = new mongoose.Schema({
+     coursestitle: String
+});
 
+const Course = mongoose.model("Course", courseSchema);
+const CoursePage = mongoose.model("CoursePage", coursePageSchema);
+
+export { CoursePage };
 export default Course;
