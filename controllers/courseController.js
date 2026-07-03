@@ -31,6 +31,11 @@ const parseSections = (sections) => {
      return typeof sections === "string" ? JSON.parse(sections) : sections;
 };
 
+const parseFaq = (faq) => {
+     if (!faq) return [];
+     return typeof faq === "string" ? JSON.parse(faq) : faq;
+};
+
 const ensureCourseSlug = async (course) => {
      if (!course || course.slug) return course;
 
@@ -43,12 +48,14 @@ const ensureCourseSlug = async (course) => {
 export const createCourse = async (req, res) => {
      try {
           const parsedSections = parseSections(req.body.sections);
+          const parsedFaq = parseFaq(req.body.faq);
           const slug = await generateUniqueSlug(req.body.title || req.body.name);
 
           const course = new Course({
                ...req.body,
                slug,
                sections: parsedSections,
+               faq: parsedFaq,
                image: req.file?.path
           });
 
@@ -111,6 +118,10 @@ export const updateCourse = async (req, res) => {
 
           if (req.body.sections) {
                updateData.sections = parseSections(req.body.sections);
+          }
+
+          if (req.body.faq) {
+               updateData.faq = parseFaq(req.body.faq);
           }
 
           if (req.body.title || req.body.name) {

@@ -58,6 +58,10 @@ const blogSchema = new mongoose.Schema({
           type: String,
           trim: true
      },
+     faq: [{
+          ques: String,
+          ans: String
+     }],
 
 }, { timestamps: true });
 const blogPageSchema = new mongoose.Schema({

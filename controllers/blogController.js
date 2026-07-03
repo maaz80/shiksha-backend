@@ -63,6 +63,8 @@ export const createBlog = async (req, res) => {
                slug = `${baseSlug}_${count++}`;
           }
 
+          const faq = req.body.faq ? (typeof req.body.faq === "string" ? JSON.parse(req.body.faq) : req.body.faq) : [];
+
           const blog = new Blog({
                title,
                alt,
@@ -73,6 +75,7 @@ export const createBlog = async (req, res) => {
                description,
                content,
                image: imageUrl,
+               faq,
 
                // 🔥 SAFE SAVE
                seoTitle: seoTitle || title,
@@ -123,6 +126,10 @@ export const updateBlog = async (req, res) => {
                updateData.seoKeywords = req.body.seoKeywords;
           }
           
+          if (req.body.faq) {
+               updateData.faq = typeof req.body.faq === "string" ? JSON.parse(req.body.faq) : req.body.faq;
+          }
+
           if (req.file) {
                updateData.image = req.file.path;
           }

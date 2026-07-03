@@ -59,6 +59,10 @@ const courseSchema = new mongoose.Schema({
           image: String,
           date: { type: Date, default: Date.now }
      }],
+     faq: [{
+          ques: String,
+          ans: String
+     }],
 }, { timestamps: true });
 
 const coursePageSchema = new mongoose.Schema({

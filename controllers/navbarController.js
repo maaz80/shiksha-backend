@@ -14,7 +14,25 @@ export const getNavbarData = async (req, res) => {
                          { name: "Resources", link: "#" },
                          { name: "Hire From Us", link: "#" }
                     ],
-                    logoutButtonName: "Logout"
+                    logoutButtonName: "Logout",
+                    moreItems: {
+                         title: "More",
+                         dropdown_items: [
+                              {
+                                   title: "Resources",
+                                   items: [
+                                        { name: "Blogs", link: "/category/blogs" },
+                                        { name: "About Us", link: "/about-us" }
+                                   ]
+                              },
+                              {
+                                   title: "Company",
+                                   items: [
+                                        { name: "Contact Us", link: "/contact-us" }
+                                   ]
+                              }
+                         ]
+                    }
                });
           }
           res.json(navbarData);
@@ -39,6 +57,17 @@ export const updateNavbarData = async (req, res) => {
                } catch (err) {
                     console.error("Error parsing dropdownItems:", err);
                     updateData.dropdownItems = [];
+               }
+          }
+
+          if (updateData.moreItems) {
+               try {
+                    updateData.moreItems = typeof updateData.moreItems === "string"
+                         ? JSON.parse(updateData.moreItems)
+                         : updateData.moreItems;
+               } catch (err) {
+                    console.error("Error parsing moreItems:", err);
+                    updateData.moreItems = { title: "More", dropdown_items: [] };
                }
           }
 

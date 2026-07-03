@@ -10,6 +10,16 @@ const navbarSchema = new mongoose.Schema({
           link: String,
      }],
      logoutButtonName: String,
+     moreItems: {
+          title: String,
+          dropdown_items: [{
+               title: String,
+               items: [{
+                    name: String,
+                    link: String
+               }]
+          }]
+     }
 }, { _id: false });
 
 
