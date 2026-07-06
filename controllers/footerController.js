@@ -2,16 +2,20 @@ import FooterColumn from "../models/FooterColumn.js";
 
 // GET ALL FOOTER COLUMNS
 export const getFooterColumns = async (req, res) => {
+     console.log("[FooterController] getFooterColumns called");
      try {
           const columns = await FooterColumn.find({ isGlobal: { $ne: true } }).sort({ order: 1 });
+          console.log("[FooterController] getFooterColumns success, count:", columns.length);
           res.json(columns);
      } catch (err) {
+          console.error("[FooterController] getFooterColumns error:", err);
           res.status(500).json({ error: err.message });
      }
 };
 
 // GET FOOTER GLOBAL SETTINGS
 export const getFooterGlobalSettings = async (req, res) => {
+     console.log("[FooterController] getFooterGlobalSettings called");
      try {
           let settings = await FooterColumn.findOne({ isGlobal: true });
           if (!settings) {
@@ -39,8 +43,10 @@ export const getFooterGlobalSettings = async (req, res) => {
                });
                await settings.save();
           }
+          console.log("[FooterController] getFooterGlobalSettings success");
           res.json(settings);
      } catch (err) {
+          console.error("[FooterController] getFooterGlobalSettings error:", err);
           res.status(500).json({ error: err.message });
      }
 };
