@@ -39,6 +39,7 @@ const allowedOrigins = [
      "http://localhost:5174",
      "http://localhost:5175",
      "http://localhost:4173",
+     "http://localhost:3000",
      "http://10.145.7.198:5173",
      "https://shikssha.netlify.app",
      "https://shikksha.netlify.app",

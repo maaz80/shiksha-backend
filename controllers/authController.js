@@ -1,6 +1,8 @@
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import { transporter } from "../config/mailer.js";
+import OTP from "../models/otpModel.js";
+import otpGenerator from "otp-generator";
 
 const generateToken = (id) => {
      return jwt.sign({ id }, process.env.JWT_SECRET || "your-secret-key", {
@@ -192,5 +194,182 @@ export const resetPassword = async (req, res) => {
      } catch (error) {
           console.error("Reset password error:", error);
           res.status(500).json({ error: error.message || "Failed to reset password" });
+     }
+};
+
+export const sendOTP = async (req, res) => {
+     try {
+          const { email, type } = req.body;
+
+          if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+               return res.status(400).json({ error: "Valid email address is required" });
+          }
+
+          if (!type || (type !== "login" && type !== "signup")) {
+               return res.status(400).json({ error: "Valid request type (login or signup) is required" });
+          }
+
+          // Check user existence
+          const user = await User.findOne({ email });
+          if (type === "login" && !user) {
+               return res.status(404).json({ error: "No account found with this email. Please sign up." });
+          }
+          if (type === "signup" && user) {
+               return res.status(400).json({ error: "Account already exists with this email. Please log in." });
+          }
+
+          // Generate 6-digit OTP
+          const otp = otpGenerator.generate(6, {
+               digits: true,
+               lowerCaseAlphabets: false,
+               upperCaseAlphabets: false,
+               specialChars: false
+          });
+
+          // Store OTP in database (store under email primary key)
+          await OTP.findOneAndUpdate(
+               { email },
+               { otp, attempts: 0, isVerified: false, createdAt: new Date() },
+               { upsert: true, new: true, returnDocument: 'after' }
+          );
+
+          // Send Email
+          await transporter.sendMail({
+               from: process.env.EMAIL_FROM || '"Shiksha" <no-reply@shiksha.com>',
+               to: email,
+               subject: "Your Shiksha Verification OTP",
+               html: `
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 10px;">
+                         <h2 style="color: #f97316; text-align: center;">Shiksha Verification</h2>
+                         <p>Hello,</p>
+                         <p>Use the following 6-digit OTP to complete your verification process:</p>
+                         <div style="text-align: center; margin: 30px 0;">
+                              <span style="color: #f97316; font-size: 32px; font-weight: bold; letter-spacing: 5px; padding: 10px 20px; background: #fff7ed; border: 1.5px dashed #f97316; border-radius: 8px; display: inline-block;">${otp}</span>
+                         </div>
+                         <p style="color: #6b7280; font-size: 14px;">This OTP is valid for 10 minutes. If you did not request this, please ignore this email.</p>
+                    </div>
+               `
+          });
+
+          res.json({ success: true, message: "OTP sent to your email successfully" });
+     } catch (error) {
+          console.error("Send OTP error:", error);
+          res.status(500).json({ error: error.message || "Failed to send OTP" });
+     }
+};
+
+export const loginWithOTP = async (req, res) => {
+     try {
+          const { email, otp } = req.body;
+
+          if (!email || !otp) {
+               return res.status(400).json({ error: "Please provide email and OTP" });
+          }
+
+          // Verify OTP
+          const otpRecord = await OTP.findOne({ email });
+          if (!otpRecord) {
+               return res.status(400).json({ error: "No OTP request found. Please request a new OTP." });
+          }
+
+          if (otpRecord.attempts >= 3) {
+               await OTP.deleteOne({ email });
+               return res.status(400).json({ error: "Too many failed attempts. Please request a new OTP." });
+          }
+
+          if (otpRecord.otp !== otp) {
+               otpRecord.attempts += 1;
+               await otpRecord.save();
+               return res.status(400).json({ error: `Invalid OTP. ${3 - otpRecord.attempts} attempts remaining.` });
+          }
+
+          // Delete OTP record after successful login
+          await OTP.deleteOne({ email });
+
+          // Find user
+          const user = await User.findOne({ email });
+          if (!user) {
+               return res.status(404).json({ error: "User not found" });
+          }
+
+          // Generate token
+          const token = generateToken(user._id);
+
+          res.json({
+               success: true,
+               token,
+               user: {
+                    id: user._id,
+                    name: user.name,
+                    email: user.email,
+               },
+          });
+     } catch (error) {
+          console.error("Login with OTP error:", error);
+          res.status(500).json({ error: error.message });
+     }
+};
+
+export const signupWithOTP = async (req, res) => {
+     try {
+          const { name, email, phone, otp } = req.body;
+
+          if (!name || !email || !phone || !otp) {
+               return res.status(400).json({ error: "Please fill in all fields" });
+          }
+
+          if (!/^[0-9]{10}$/.test(phone)) {
+               return res.status(400).json({ error: "Please enter a valid 10-digit phone number" });
+          }
+
+          // Verify OTP
+          const otpRecord = await OTP.findOne({ email });
+          if (!otpRecord) {
+               return res.status(400).json({ error: "No OTP request found. Please request a new OTP." });
+          }
+
+          if (otpRecord.attempts >= 3) {
+               await OTP.deleteOne({ email });
+               return res.status(400).json({ error: "Too many failed attempts. Please request a new OTP." });
+          }
+
+          if (otpRecord.otp !== otp) {
+               otpRecord.attempts += 1;
+               await otpRecord.save();
+               return res.status(400).json({ error: `Invalid OTP. ${3 - otpRecord.attempts} attempts remaining.` });
+          }
+
+          // Delete OTP record
+          await OTP.deleteOne({ email });
+
+          // Check user existence
+          const userExists = await User.findOne({ email });
+          if (userExists) {
+               return res.status(400).json({ error: "User already exists with this email" });
+          }
+
+          // Create user
+          const user = await User.create({
+               name,
+               email,
+               phone,
+          });
+
+          // Generate token
+          const token = generateToken(user._id);
+
+          res.status(201).json({
+               success: true,
+               token,
+               user: {
+                    id: user._id,
+                    name: user.name,
+                    email: user.email,
+                    phone: user.phone,
+               },
+          });
+     } catch (error) {
+          console.error("Signup with OTP error:", error);
+          res.status(500).json({ error: error.message });
      }
 };

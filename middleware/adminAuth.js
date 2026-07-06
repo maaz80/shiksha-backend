@@ -10,7 +10,10 @@ const PUBLIC_WRITE_PATHS = new Set([
      "/send-otp",
      "/submit-booking",
      "/enroll",
-     "/complete-lesson"
+     "/complete-lesson",
+     "/auth/send-otp",
+     "/auth/login-otp",
+     "/auth/signup-otp"
 ]);
 
 const SAFE_METHODS = new Set([

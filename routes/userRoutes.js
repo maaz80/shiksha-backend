@@ -1,5 +1,5 @@
 import express from "express";
-import { signup, login, getMe, logout, forgotPassword, resetPassword } from "../controllers/authController.js";
+import { signup, login, getMe, logout, forgotPassword, resetPassword, sendOTP, loginWithOTP, signupWithOTP } from "../controllers/authController.js";
 import { enrollCourse, completeLessonAndUnlockNext, getCourseEnrollment } from "../controllers/enrollmentController.js";
 import { userAuth } from "../middleware/userAuth.js";
 
@@ -10,6 +10,9 @@ router.post("/auth/signup", signup);
 router.post("/auth/login", login);
 router.post("/auth/forgot-password", forgotPassword);
 router.post("/auth/reset-password", resetPassword);
+router.post("/auth/send-otp", sendOTP);
+router.post("/auth/login-otp", loginWithOTP);
+router.post("/auth/signup-otp", signupWithOTP);
 
 // Auth routes (protected)
 router.get("/auth/me", userAuth, getMe);

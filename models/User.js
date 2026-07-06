@@ -21,9 +21,18 @@ const userSchema = new mongoose.Schema(
           },
           password: {
                type: String,
-               required: [true, "Please provide a password"],
+               required: false,
                minlength: [6, "Password must be at least 6 characters"],
-               select: false, // Don't return password by default
+               select: false,
+          },
+          phone: {
+               type: String,
+               required: [true, "Please provide a phone number"],
+               trim: true,
+               match: [
+                    /^[0-9]{10}$/,
+                    "Please provide a valid 10-digit phone number",
+               ],
           },
           enrolledCourses: [
                {
@@ -59,7 +68,7 @@ const userSchema = new mongoose.Schema(
 
 // Hash password before saving
 userSchema.pre("save", async function () {
-     if (!this.isModified("password")) {
+     if (!this.isModified("password") || !this.password) {
           return;
      }
 
