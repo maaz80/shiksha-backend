@@ -200,25 +200,34 @@ export const resetPassword = async (req, res) => {
 export const sendOTP = async (req, res) => {
      try {
           const { email, type } = req.body;
+          console.log(`[sendOTP] Request received for email: ${email}, type: ${type}`);
 
           if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+               console.log("[sendOTP] Validation failed: invalid email format");
                return res.status(400).json({ error: "Valid email address is required" });
           }
 
           if (!type || (type !== "login" && type !== "signup")) {
+               console.log("[sendOTP] Validation failed: invalid request type");
                return res.status(400).json({ error: "Valid request type (login or signup) is required" });
           }
 
           // Check user existence
+          console.log("[sendOTP] Checking user existence in DB...");
           const user = await User.findOne({ email });
+          console.log(`[sendOTP] User check complete. User exists: ${!!user}`);
+
           if (type === "login" && !user) {
+               console.log("[sendOTP] Login check failed: user does not exist");
                return res.status(404).json({ error: "No account found with this email. Please sign up." });
           }
           if (type === "signup" && user) {
+               console.log("[sendOTP] Signup check failed: user already exists");
                return res.status(400).json({ error: "Account already exists with this email. Please log in." });
           }
 
           // Generate 6-digit OTP
+          console.log("[sendOTP] Generating 6-digit OTP...");
           const otp = otpGenerator.generate(6, {
                digits: true,
                lowerCaseAlphabets: false,
@@ -226,14 +235,17 @@ export const sendOTP = async (req, res) => {
                specialChars: false
           });
 
-          // Store OTP in database (store under email primary key)
+          // Store OTP in database
+          console.log("[sendOTP] Storing OTP in database...");
           await OTP.findOneAndUpdate(
                { email },
                { otp, attempts: 0, isVerified: false, createdAt: new Date() },
                { upsert: true, new: true, returnDocument: 'after' }
           );
+          console.log("[sendOTP] OTP stored successfully in DB");
 
           // Send Email
+          console.log("[sendOTP] Preparing to send email via nodemailer...");
           await transporter.sendMail({
                from: process.env.EMAIL_FROM || '"Shiksha" <no-reply@shiksha.com>',
                to: email,
@@ -250,10 +262,11 @@ export const sendOTP = async (req, res) => {
                     </div>
                `
           });
+          console.log("[sendOTP] Email dispatched successfully");
 
           res.json({ success: true, message: "OTP sent to your email successfully" });
      } catch (error) {
-          console.error("Send OTP error:", error);
+          console.error("❌ [sendOTP] Error encountered:", error);
           res.status(500).json({ error: error.message || "Failed to send OTP" });
      }
 };
