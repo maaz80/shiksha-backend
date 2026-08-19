@@ -217,13 +217,22 @@ export const sendOTP = async (req, res) => {
           const user = await User.findOne({ email });
           console.log(`[sendOTP] User check complete. User exists: ${!!user}`);
 
+          let isAutoSwitchedToLogin = false;
+          let customMessage = "OTP sent to your email successfully";
+
           if (type === "login" && !user) {
-               console.log("[sendOTP] Login check failed: user does not exist");
-               return res.status(404).json({ error: "No account found with this email. Please sign up." });
+               console.log("[sendOTP] Login check: user does not exist. Instructing frontend to switch to signup.");
+               return res.json({
+                    success: true,
+                    switchedToSignup: true,
+                    message: "No account found with this email. Switched to Sign Up to create your account."
+               });
           }
+
           if (type === "signup" && user) {
-               console.log("[sendOTP] Signup check failed: user already exists");
-               return res.status(400).json({ error: "Account already exists with this email. Please log in." });
+               console.log("[sendOTP] Signup check: account already exists. Auto-switching to login mode and sending OTP.");
+               isAutoSwitchedToLogin = true;
+               customMessage = "Account already exists with this email. Switched to Login and sent OTP!";
           }
 
           // Generate 6-digit OTP
@@ -264,7 +273,11 @@ export const sendOTP = async (req, res) => {
           });
           console.log("[sendOTP] Email dispatched successfully");
 
-          res.json({ success: true, message: "OTP sent to your email successfully" });
+          res.json({
+               success: true,
+               message: customMessage,
+               switchedToLogin: isAutoSwitchedToLogin
+          });
      } catch (error) {
           console.error("❌ [sendOTP] Error encountered:", error);
           res.status(500).json({ error: error.message || "Failed to send OTP" });
