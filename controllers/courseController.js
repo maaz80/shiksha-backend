@@ -44,6 +44,15 @@ const ensureCourseSlug = async (course) => {
      return course;
 };
 
+const parseJSONField = (field) => {
+     if (!field) return undefined;
+     try {
+          return typeof field === "string" ? JSON.parse(field) : field;
+     } catch (e) {
+          return field;
+     }
+};
+
 // CREATE
 export const createCourse = async (req, res) => {
      try {
@@ -51,12 +60,54 @@ export const createCourse = async (req, res) => {
           const parsedFaq = parseFaq(req.body.faq);
           const slug = await generateUniqueSlug(req.body.title || req.body.name);
 
+          const coverImg = req.file?.path || (Array.isArray(req.files) ? req.files.find(f => f.fieldname === "image")?.path : undefined) || req.body.image;
+          
+          let shortTermObj = parseJSONField(req.body.shortTerm);
+          if (shortTermObj && Array.isArray(shortTermObj.items) && Array.isArray(req.files)) {
+               req.files.forEach(file => {
+                    const match = file.fieldname.match(/^shortTerm_(\d+)$/);
+                    if (match) {
+                         const idx = parseInt(match[1], 10);
+                         if (shortTermObj.items[idx]) {
+                              shortTermObj.items[idx].image = file.path;
+                         }
+                    }
+               });
+          }
+
+          let rawVideos = parseJSONField(req.body.videos);
+          if (Array.isArray(rawVideos)) {
+               if (Array.isArray(req.files)) {
+                    req.files.forEach(file => {
+                         const match = file.fieldname.match(/^videoThumbnail_(\d+)$/);
+                         if (match) {
+                              const idx = parseInt(match[1], 10);
+                              if (rawVideos[idx]) {
+                                   rawVideos[idx].thumbnail = file.path;
+                              }
+                         }
+                    });
+               }
+               rawVideos = rawVideos.map(v => ({
+                    title: v?.title || "",
+                    alt: v?.alt || "",
+                    video: typeof v?.video === "string" ? v.video : "",
+                    thumbnail: typeof v?.thumbnail === "string" ? v.thumbnail : ""
+               }));
+          } else {
+               rawVideos = [];
+          }
+
           const course = new Course({
                ...req.body,
                slug,
                sections: parsedSections,
                faq: parsedFaq,
-               image: req.file?.path
+               shortTerm: shortTermObj,
+               caseStudies: parseJSONField(req.body.caseStudies),
+               careerDomains: parseJSONField(req.body.careerDomains),
+               videos: rawVideos,
+               image: coverImg
           });
 
           await course.save();
@@ -105,7 +156,19 @@ export const getCourse = async (req, res) => {
           }
 
           await ensureCourseSlug(course);
-          res.json(course);
+
+          const courseObj = course.toObject();
+          const pageData = await CoursePage.findOne();
+          if (pageData) {
+               if (!courseObj.caseStudies || !courseObj.caseStudies.items || courseObj.caseStudies.items.length === 0) {
+                    courseObj.caseStudies = pageData.caseStudies;
+               }
+               if (!courseObj.careerDomains || !courseObj.careerDomains.items || courseObj.careerDomains.items.length === 0) {
+                    courseObj.careerDomains = pageData.careerDomains;
+               }
+          }
+
+          res.json(courseObj);
      } catch (err) {
           res.status(500).json({ error: err.message });
      }
@@ -124,6 +187,55 @@ export const updateCourse = async (req, res) => {
                updateData.faq = parseFaq(req.body.faq);
           }
 
+          let shortTermObj = parseJSONField(req.body.shortTerm);
+          if (shortTermObj && Array.isArray(shortTermObj.items) && Array.isArray(req.files)) {
+               req.files.forEach(file => {
+                    const match = file.fieldname.match(/^shortTerm_(\d+)$/);
+                    if (match) {
+                         const idx = parseInt(match[1], 10);
+                         if (shortTermObj.items[idx]) {
+                              shortTermObj.items[idx].image = file.path;
+                         }
+                    }
+               });
+          }
+          if (shortTermObj) {
+               updateData.shortTerm = shortTermObj;
+          }
+
+          if (req.body.caseStudies) {
+               updateData.caseStudies = parseJSONField(req.body.caseStudies);
+          }
+
+          if (req.body.careerDomains) {
+               updateData.careerDomains = parseJSONField(req.body.careerDomains);
+          }
+
+          if (req.body.videos) {
+               let rawVideos = parseJSONField(req.body.videos);
+               if (Array.isArray(rawVideos)) {
+                    if (Array.isArray(req.files)) {
+                         req.files.forEach(file => {
+                              const match = file.fieldname.match(/^videoThumbnail_(\d+)$/);
+                              if (match) {
+                                   const idx = parseInt(match[1], 10);
+                                   if (rawVideos[idx]) {
+                                        rawVideos[idx].thumbnail = file.path;
+                                   }
+                              }
+                         });
+                    }
+                    updateData.videos = rawVideos.map(v => ({
+                         title: v?.title || "",
+                         alt: v?.alt || "",
+                         video: typeof v?.video === "string" ? v.video : "",
+                         thumbnail: typeof v?.thumbnail === "string" ? v.thumbnail : ""
+                    }));
+               } else {
+                    updateData.videos = [];
+               }
+          }
+
           if (req.body.title || req.body.name) {
                updateData.slug = await generateUniqueSlug(
                     req.body.title || req.body.name,
@@ -131,14 +243,15 @@ export const updateCourse = async (req, res) => {
                );
           }
 
-          if (req.file) {
-               updateData.image = req.file.path;
+          const coverImg = req.file?.path || (Array.isArray(req.files) ? req.files.find(f => f.fieldname === "image")?.path : undefined);
+          if (coverImg) {
+               updateData.image = coverImg;
           }
 
           const updated = await Course.findByIdAndUpdate(
                req.params.id,
                updateData,
-               { new: true }
+               { returnDocument: 'after' }
           );
 
           res.json(updated);
@@ -154,81 +267,6 @@ export const deleteCourse = async (req, res) => {
      res.json({ success: true });
 };
 
-// ADD REVIEW
-export const addCourseReview = async (req, res) => {
-     try {
-          const { id } = req.params;
-          const { name, role, rating, text } = req.body;
-
-          if (!name || !rating || !text) {
-               return res.status(400).json({ error: "Please fill in all fields" });
-          }
-
-          const course = await Course.findById(id);
-          if (!course) {
-               return res.status(404).json({ error: "Course not found" });
-          }
-
-          const image = req.file ? req.file.path : undefined;
-
-          course.reviews.push({ name, role, rating: Number(rating), text, image });
-          await course.save();
-
-          res.status(201).json(course);
-     } catch (err) {
-          res.status(500).json({ error: err.message });
-     }
-};
-
-// DELETE REVIEW
-export const deleteCourseReview = async (req, res) => {
-     try {
-          const { id, reviewId } = req.params;
-
-          const course = await Course.findById(id);
-          if (!course) {
-               return res.status(404).json({ error: "Course not found" });
-          }
-
-          course.reviews = course.reviews.filter((r) => String(r._id) !== String(reviewId));
-          await course.save();
-
-          res.json(course);
-     } catch (err) {
-          res.status(500).json({ error: err.message });
-     }
-};
-
-export const getAllReviews = async (req, res) => {
-     try {
-          const courses = await Course.find({}, { name: 1, title: 1, reviews: 1 });
-          const allReviews = [];
-
-          courses.forEach((course) => {
-               if (course.reviews && course.reviews.length > 0) {
-                    course.reviews.forEach((review) => {
-                         allReviews.push({
-                              _id: review._id,
-                              name: review.name,
-                              rating: review.rating,
-                              text: review.text,
-                              image: review.image,
-                              date: review.date,
-                              role: review.role || "",
-                              courseName: course.name || course.title || "Student"
-                         });
-                    });
-               }
-          });
-
-          // Sort by date descending (latest reviews first)
-          allReviews.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-          res.json(allReviews);
-     } catch (err) {
-          res.status(500).json({ error: err.message });
-     }
-};
 
 // ✅ GET COURSE PAGE DATA (TITLES)
 export const getCoursePageData = async (req, res) => {
@@ -250,7 +288,7 @@ export const updateCoursePageData = async (req, res) => {
      try {
           const pageData = await CoursePage.findOneAndUpdate({}, req.body, {
                upsert: true,
-               new: true,
+               returnDocument: 'after',
                setDefaultsOnInsert: true
           });
           res.json(pageData);
@@ -258,3 +296,39 @@ export const updateCoursePageData = async (req, res) => {
           res.status(500).json({ error: err.message });
      }
 };
+
+export const updateGlobalCourseConfig = async (req, res) => {
+     try {
+          let payload = req.body;
+          if (req.body.data) {
+               payload = typeof req.body.data === "string" ? JSON.parse(req.body.data) : req.body.data;
+          }
+
+          let caseStudies = payload.caseStudies || {};
+          let careerDomains = payload.careerDomains || {};
+
+          // Handle uploaded images for global case studies if any
+          if (req.files && Array.isArray(req.files) && caseStudies.items) {
+               req.files.forEach(file => {
+                    const match = file.fieldname.match(/^globalCaseStudy_(\d+)$/);
+                    if (match) {
+                         const idx = parseInt(match[1], 10);
+                         if (caseStudies.items[idx]) {
+                              caseStudies.items[idx].image = file.path;
+                         }
+                    }
+               });
+          }
+
+          const pageData = await CoursePage.findOneAndUpdate(
+               {},
+               { $set: { caseStudies, careerDomains } },
+               { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
+          );
+
+          res.json({ success: true, pageData });
+     } catch (err) {
+          res.status(500).json({ error: err.message });
+     }
+};
+

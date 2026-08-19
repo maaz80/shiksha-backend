@@ -23,7 +23,7 @@ export const getFooterGlobalSettings = async (req, res) => {
                     isGlobal: true,
                     navigation: [
                          { itemname: "Home", itempath: "/" },
-                         { itemname: "Blogs", itempath: "/category/blogs" },
+                         { itemname: "Blogs", itempath: "/blog" },
                          { itemname: "Courses", itempath: "/courses" },
                          { itemname: "About us", itempath: "/about-us" },
                          { itemname: "Disclaimer", itempath: "/disclaimer" },
@@ -37,8 +37,6 @@ export const getFooterGlobalSettings = async (req, res) => {
                          { icon: "FaLinkedinIn", path: "#" },
                          { icon: "CiYoutube", path: "#" }
                     ],
-                    buttonname: "Refer & Earn",
-                    buttontitle: "Follow us!",
                     copyright: "© 2026 - Shiksha Design All Rights Reserved."
                });
                await settings.save();
@@ -54,17 +52,15 @@ export const getFooterGlobalSettings = async (req, res) => {
 // UPDATE FOOTER GLOBAL SETTINGS
 export const updateFooterGlobalSettings = async (req, res) => {
      try {
-          const { navigation, socials, buttonname, buttontitle, copyright } = req.body;
+          const { navigation, socials, copyright } = req.body;
           const updated = await FooterColumn.findOneAndUpdate(
                { isGlobal: true },
                {
                     navigation: navigation || [],
                     socials: socials || [],
-                    buttonname: buttonname || "",
-                    buttontitle: buttontitle || "",
                     copyright: copyright || ""
                },
-               { new: true, upsert: true }
+               { returnDocument: 'after', upsert: true }
           );
           res.json(updated);
      } catch (err) {
@@ -102,7 +98,7 @@ export const updateFooterColumn = async (req, res) => {
           const updated = await FooterColumn.findByIdAndUpdate(
                id,
                { title, links, order },
-               { new: true }
+               { returnDocument: 'after' }
           );
 
           if (!updated) {

@@ -24,7 +24,7 @@ export const updateHomeData = async (req, res) => {
      try {
           const homeData = await Home.findOneAndUpdate({}, req.body, {
                upsert: true,
-               new: true,
+               returnDocument: 'after',
                setDefaultsOnInsert: true
           });
           res.json(homeData);

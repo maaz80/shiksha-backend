@@ -9,7 +9,7 @@ export const getPageSEO = async (req, res) => {
           const seo = await PageSEO.findOne({ pageSlug: pageId });
 
           if (!seo) {
-               return res.json({ title: "", description: "", keywords: "" });
+               return res.json({ title: "", description: "", keywords: "", schema: "" });
           }
 
           res.json(seo);
@@ -22,7 +22,7 @@ export const getPageSEO = async (req, res) => {
 export const updatePageSEO = async (req, res) => {
      try {
           const { pageId } = req.params;
-          const { title, description, keywords } = req.body;
+          const { title, description, keywords, schema } = req.body;
 
           let seo = await PageSEO.findOne({ pageSlug: pageId });
 
@@ -30,13 +30,15 @@ export const updatePageSEO = async (req, res) => {
                seo.title = title;
                seo.description = description;
                seo.keywords = keywords;
+               seo.schema = schema || "";
                await seo.save();
           } else {
                seo = await PageSEO.create({
                     pageSlug: pageId,
                     title,
                     description,
-                    keywords
+                    keywords,
+                    schema: schema || ""
                });
           }
 

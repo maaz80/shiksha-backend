@@ -8,7 +8,7 @@ export const getNavbarData = async (req, res) => {
                return res.json({
                     logo: "",
                     buttonName: "All Courses",
-                    searchPlaceholder: "Search your course",
+                    searchPlaceholder: "What do you want to learn ?",
                     dropdownName: "More",
                     dropdownItems: [
                          { name: "Resources", link: "#" },
@@ -21,7 +21,7 @@ export const getNavbarData = async (req, res) => {
                               {
                                    title: "Resources",
                                    items: [
-                                        { name: "Blogs", link: "/category/blogs" },
+                                        { name: "Blogs", link: "/blog" },
                                         { name: "About Us", link: "/about-us" }
                                    ]
                               },
@@ -73,7 +73,7 @@ export const updateNavbarData = async (req, res) => {
 
           const navbarData = await Navbar.findOneAndUpdate({}, updateData, {
                upsert: true,
-               new: true,
+               returnDocument: 'after',
                setDefaultsOnInsert: true
           });
           res.json(navbarData);

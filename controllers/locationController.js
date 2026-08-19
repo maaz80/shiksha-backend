@@ -216,7 +216,7 @@ export const updateLocation = async (req, res) => {
     const updated = await Location.findByIdAndUpdate(
       existing._id,
       { $set: parsed },
-      { new: true }
+      { returnDocument: 'after' }
     );
 
     res.json(updated);
@@ -314,8 +314,9 @@ export const updateItem = async (req, res) => {
 
     if (parsed?.page?.location?.cards) {
       parsed.page.location.cards = parsed.page.location.cards.map((card) => ({
-        ...card,
+        title: card.title || "",
         image: card.image || "",
+        para: card.para || "",
       }));
 
       files.forEach((file, i) => {
@@ -325,6 +326,7 @@ export const updateItem = async (req, res) => {
         }
       });
     }
+
 
     const mergedItem = {
       ...currentItem.toObject(),

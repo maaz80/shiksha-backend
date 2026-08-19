@@ -13,14 +13,19 @@ import {
 
 const router = express.Router();
 
+const blogUploadMiddleware = upload.fields([
+     { name: "image", maxCount: 1 },
+     { name: "authorImageFile", maxCount: 1 }
+]);
+
 router.get("/blogpage-data", getBlogPageData);
 router.put("/blogpage-data", updateBlogPageData);
 
 router.get("/blogs", getBlogs);
 router.get("/blogs/:slug", getBlogBySlug);
-router.post("/blogs", upload.single("image"), createBlog);
+router.post("/blogs", blogUploadMiddleware, createBlog);
 
-router.put("/blogs/:id", upload.single("image"), updateBlog);
+router.put("/blogs/:id", blogUploadMiddleware, updateBlog);
 
 router.delete("/blogs/:id", deleteBlog);
 

@@ -44,7 +44,22 @@ export const createBlog = async (req, res) => {
           const alt = req.body.alt;
           const category = req.body.category;
           const date = req.body.date;
-          const author = req.body.author;
+          const author = req.body.author || "Admin";
+          const authorDesignation = req.body.authorDesignation || "";
+          const authorBio = req.body.authorBio || "";
+          
+          let authorImage = req.body.authorImage || "";
+          if (req.files?.authorImageFile?.[0]?.path) {
+               authorImage = req.files.authorImageFile[0].path;
+          }
+
+          let authorSocial = {};
+          if (req.body.authorTwitter) {
+               authorSocial = { twitter: req.body.authorTwitter };
+          } else if (req.body.authorSocial) {
+               authorSocial = typeof req.body.authorSocial === "string" ? JSON.parse(req.body.authorSocial) : req.body.authorSocial;
+          }
+
           const description = req.body.description;
           const content = req.body.content;
 
@@ -53,7 +68,7 @@ export const createBlog = async (req, res) => {
           const seoKeywords = req.body.seoKeywords;
           const seoDescription = req.body.seoDescription;
 
-          const imageUrl = req.file?.path || "";
+          const imageUrl = req.files?.image?.[0]?.path || req.file?.path || "";
 
           const baseSlug = createSlug(title);
           let slug = baseSlug;
@@ -64,6 +79,7 @@ export const createBlog = async (req, res) => {
           }
 
           const faq = req.body.faq ? (typeof req.body.faq === "string" ? JSON.parse(req.body.faq) : req.body.faq) : [];
+          const schemas = req.body.schemas ? (typeof req.body.schemas === "string" ? JSON.parse(req.body.schemas) : req.body.schemas) : [];
 
           const blog = new Blog({
                title,
@@ -72,10 +88,15 @@ export const createBlog = async (req, res) => {
                category,
                date,
                author,
+               authorDesignation,
+               authorImage,
+               authorBio,
+               authorSocial,
                description,
                content,
                image: imageUrl,
                faq,
+               schemas,
 
                // 🔥 SAFE SAVE
                seoTitle: seoTitle || title,
@@ -97,6 +118,16 @@ export const updateBlog = async (req, res) => {
           const { id } = req.params;
 
           const updateData = { ...req.body };
+
+          if (req.files?.authorImageFile?.[0]?.path) {
+               updateData.authorImage = req.files.authorImageFile[0].path;
+          }
+
+          if (req.body.authorTwitter !== undefined) {
+               updateData.authorSocial = { twitter: req.body.authorTwitter };
+          } else if (req.body.authorSocial && typeof req.body.authorSocial === "string") {
+               updateData.authorSocial = JSON.parse(req.body.authorSocial);
+          }
 
           // title change → slug update + duplicate handle
           if (req.body.title) {
@@ -130,14 +161,20 @@ export const updateBlog = async (req, res) => {
                updateData.faq = typeof req.body.faq === "string" ? JSON.parse(req.body.faq) : req.body.faq;
           }
 
-          if (req.file) {
+          if (req.body.schemas) {
+               updateData.schemas = typeof req.body.schemas === "string" ? JSON.parse(req.body.schemas) : req.body.schemas;
+          }
+
+          if (req.files?.image?.[0]?.path) {
+               updateData.image = req.files.image[0].path;
+          } else if (req.file) {
                updateData.image = req.file.path;
           }
 
           const blog = await Blog.findByIdAndUpdate(
                id,
                updateData,
-               { new: true }
+               { returnDocument: 'after' }
           );
 
           res.json(blog);
@@ -178,7 +215,7 @@ export const updateBlogPageData = async (req, res) => {
      try {
           const pageData = await BlogPage.findOneAndUpdate({}, req.body, {
                upsert: true,
-               new: true,
+               returnDocument: 'after',
                setDefaultsOnInsert: true
           });
           res.json(pageData);

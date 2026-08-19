@@ -20,7 +20,7 @@ export const generateAndSendOTP = async (phone, email) => {
           await OTP.findOneAndUpdate(
                { phone },
                { otp, email, attempts: 0, isVerified: false, createdAt: new Date() },
-               { upsert: true, new: true, returnDocument: 'after' }
+               { upsert: true, returnDocument: 'after' }
           );
 
           // Send OTP via Email

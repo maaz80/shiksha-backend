@@ -1,8 +1,6 @@
 import mongoose from "mongoose";
 
-
 const blogSchema = new mongoose.Schema({
-
      title: {
           type: String,
           required: true
@@ -11,32 +9,44 @@ const blogSchema = new mongoose.Schema({
           type: String,
           required: true
      },
-
      category: {
           type: String,
           required: true
      },
-
      date: {
           type: String,
           required: true
      },
-
      author: {
           type: String,
           required: true
      },
-
+     authorDesignation: {
+          type: String,
+          default: ""
+     },
+     authorImage: {
+          type: String,
+          default: ""
+     },
+     authorBio: {
+          type: String,
+          default: ""
+     },
+     authorSocial: {
+          facebook: { type: String, default: "" },
+          twitter: { type: String, default: "" },
+          linkedin: { type: String, default: "" },
+          instagram: { type: String, default: "" }
+     },
      description: {
           type: String,
           required: true
      },
-
      content: {
           type: String,
           required: true
      },
-
      image: {
           type: String,
           required: true
@@ -58,12 +68,15 @@ const blogSchema = new mongoose.Schema({
           type: String,
           trim: true
      },
+     schemas: [{
+          type: String
+     }],
      faq: [{
           ques: String,
           ans: String
      }],
-
 }, { timestamps: true });
+
 const blogPageSchema = new mongoose.Schema({
      blogstitle: String,
      featuredblogstitle: String

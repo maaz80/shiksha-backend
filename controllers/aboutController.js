@@ -23,7 +23,7 @@ export const updateAboutData = async (req, res) => {
      try {
           const aboutData = await About.findOneAndUpdate({}, req.body, {
                upsert: true,
-               new: true,
+               returnDocument: 'after',
                setDefaultsOnInsert: true
           });
           res.json(aboutData);

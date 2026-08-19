@@ -37,6 +37,56 @@ const courseSchema = new mongoose.Schema({
 
      sections: [sectionSchema], // curriculum
 
+     // Section 1: Promo Fields
+     promoTitle: String,
+     promoDescription: String,
+     promoBenefits: String,
+     promoSocialBottomContent: String,
+
+     // Section 2: Brochure Fields
+     brochureTitle: String,
+     brochureSubtext: String,
+     brochurePhones: String,
+     brochureLink: String,
+
+     // Section 3: Short-Term Courses
+     shortTerm: {
+          title: String,
+          description: String,
+          items: [{
+               title: String,
+               description: String,
+               duration: String,
+               iconText: String,
+               image: String,
+               alt: String
+          }]
+     },
+
+     // Section 4: Case Studies
+     caseStudies: {
+          title: String,
+          description: String,
+          buttonText: String,
+          items: [{
+               image: String,
+               alt: String,
+               link: String
+          }]
+     },
+
+     // Section 5: Career Domains
+     careerDomains: {
+          title: String,
+          description: String,
+          items: [{
+               name: String,
+               link: String,
+               iconName: String,
+               color: String
+          }]
+     },
+
      alt: {
           type: String,
           default: ""
@@ -59,6 +109,12 @@ const courseSchema = new mongoose.Schema({
           image: String,
           date: { type: Date, default: Date.now }
      }],
+     videos: [{
+          title: String,
+          alt: String,
+          video: String,
+          thumbnail: String
+     }],
      faq: [{
           ques: String,
           ans: String
@@ -66,8 +122,28 @@ const courseSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 const coursePageSchema = new mongoose.Schema({
-     coursestitle: String
-});
+     coursestitle: String,
+     caseStudies: {
+          title: String,
+          description: String,
+          buttonText: String,
+          items: [{
+               image: String,
+               alt: String,
+               link: String
+          }]
+     },
+     careerDomains: {
+          title: String,
+          description: String,
+          items: [{
+               name: String,
+               link: String,
+               iconName: String,
+               color: String
+          }]
+     }
+}, { strict: false, timestamps: true });
 
 const Course = mongoose.model("Course", courseSchema);
 const CoursePage = mongoose.model("CoursePage", coursePageSchema);

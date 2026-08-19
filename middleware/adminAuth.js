@@ -13,7 +13,8 @@ const PUBLIC_WRITE_PATHS = new Set([
      "/complete-lesson",
      "/auth/send-otp",
      "/auth/login-otp",
-     "/auth/signup-otp"
+     "/auth/signup-otp",
+     "/leads"
 ]);
 
 const SAFE_METHODS = new Set([
@@ -119,8 +120,15 @@ export const verifyAdminToken = (token) => {
 
 export const requireAdminForWrites = (req, res, next) => {
      const requestPath = req.path.replace(/\/$/, "") || "/";
+     const originalPath = req.originalUrl?.split("?")[0]?.replace(/\/$/, "") || "/";
+     const normalizedPath = requestPath.replace(/^\/api/, "") || "/";
 
-     if (SAFE_METHODS.has(req.method) || PUBLIC_WRITE_PATHS.has(requestPath)) {
+     if (
+          SAFE_METHODS.has(req.method) ||
+          PUBLIC_WRITE_PATHS.has(requestPath) ||
+          PUBLIC_WRITE_PATHS.has(originalPath) ||
+          PUBLIC_WRITE_PATHS.has(normalizedPath)
+     ) {
           return next();
      }
 

@@ -7,7 +7,8 @@ export const getPolicyData = async (req, res) => {
           if (!policyData) {
                return res.json({
                     disclaimer: { title: "Disclaimer", content: "" },
-                    privacyPolicy: { title: "Privacy Policy", content: "" }
+                    privacyPolicy: { title: "Privacy Policy", content: "" },
+                    termsAndConditionsEnrolment: { title: "Terms & Conditions - Enrolment", content: "" }
                });
           }
           res.json(policyData);
@@ -21,7 +22,7 @@ export const updatePolicyData = async (req, res) => {
      try {
           const policyData = await Policy.findOneAndUpdate({}, req.body, {
                upsert: true,
-               new: true,
+               returnDocument: 'after',
                setDefaultsOnInsert: true
           });
           res.json(policyData);

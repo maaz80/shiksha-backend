@@ -8,6 +8,10 @@ const policySchema = new mongoose.Schema({
      privacyPolicy: {
           title: { type: String, default: "Privacy Policy" },
           content: { type: String, default: "" },
+     },
+     termsAndConditionsEnrolment: {
+          title: { type: String, default: "Terms & Conditions - Enrolment" },
+          content: { type: String, default: "" },
      }
 });
 

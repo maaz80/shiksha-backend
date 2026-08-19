@@ -37,6 +37,7 @@ const userSchema = new mongoose.Schema(
           enrolledCourses: [
                {
                     courseId: mongoose.Schema.Types.ObjectId,
+                    courseSlug: { type: String },
                     enrolledAt: {
                          type: Date,
                          default: Date.now,

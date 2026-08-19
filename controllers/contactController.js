@@ -36,7 +36,7 @@ export const updateContactData = async (req, res) => {
      try {
           const contactData = await Contact.findOneAndUpdate({}, req.body, {
                upsert: true,
-               new: true,
+               returnDocument: 'after',
                setDefaultsOnInsert: true
           });
           res.json(contactData);

@@ -240,7 +240,7 @@ export const sendOTP = async (req, res) => {
           await OTP.findOneAndUpdate(
                { email },
                { otp, attempts: 0, isVerified: false, createdAt: new Date() },
-               { upsert: true, new: true, returnDocument: 'after' }
+               { upsert: true, returnDocument: 'after' }
           );
           console.log("[sendOTP] OTP stored successfully in DB");
 

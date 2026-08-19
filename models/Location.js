@@ -23,11 +23,13 @@ const pageSchema = new mongoose.Schema({
     description: String,
     cards: [
       {
+        title: String,
         image: String,
         para: String,
       }
     ]
   },
+
   why: {
     title: String,
     content: String,

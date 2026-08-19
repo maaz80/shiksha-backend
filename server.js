@@ -25,6 +25,9 @@ import aboutRoutes from "./routes/aboutRoutes.js";
 import navbarRoutes from "./routes/navbarRoutes.js";
 import policyRoutes from "./routes/policyRoutes.js";
 import contactRoutes from "./routes/contactRoutes.js";
+import leadRoutes from "./routes/leadRoutes.js";
+import testimonialRoutes from "./routes/testimonialRoutes.js";
+import authorTemplateRoutes from "./routes/authorTemplateRoutes.js";
 import upload from "./middleware/multer.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -89,6 +92,10 @@ app.use("/api", aboutRoutes);
 app.use("/api", navbarRoutes);
 app.use("/api", policyRoutes);
 app.use("/api", contactRoutes);
+app.use("/api", leadRoutes);
+app.use("/api", testimonialRoutes);
+app.use("/api", authorTemplateRoutes);
+
 
 app.post("/api/upload", upload.single("image"), (req, res) => {
      try {

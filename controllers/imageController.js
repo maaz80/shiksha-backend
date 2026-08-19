@@ -24,7 +24,7 @@ export const updateImagesConfig = async (req, res) => {
           const config = await Image.findOneAndUpdate(
                {},
                req.body,
-               { new: true, upsert: true, setDefaultsOnInsert: true }
+               { returnDocument: 'after', upsert: true, setDefaultsOnInsert: true }
           );
           res.json(config);
      } catch (err) {

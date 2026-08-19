@@ -6,11 +6,20 @@ const MAX_FILE_SIZE_BYTES = 25 * 1024 * 1024; // 25 MB
 
 const allowedMimeTypes = new Set([
      "image/jpeg",
+     "image/jpg",
+     "image/pjpeg",
      "image/png",
      "image/webp",
+     "image/gif",
+     "image/svg+xml",
+     "image/avif",
+     "image/bmp",
+     "image/tiff",
+     "image/x-icon",
      "video/mp4",
      "video/quicktime",
-     "video/webm"
+     "video/webm",
+     "video/x-matroska"
 ]);
 
 const allowedExtensions = new Set([
@@ -18,9 +27,17 @@ const allowedExtensions = new Set([
      "jpeg",
      "png",
      "webp",
+     "gif",
+     "svg",
+     "avif",
+     "bmp",
+     "tiff",
+     "tif",
+     "ico",
      "mp4",
      "mov",
-     "webm"
+     "webm",
+     "mkv"
 ]);
 
 const storage = new CloudinaryStorage({
@@ -34,13 +51,11 @@ const storage = new CloudinaryStorage({
                .replace(/[^a-z0-9]+/g, "-")
                .replace(/^-+|-+$/g, "");
 
-          // const uniqueSuffix = Math.random().toString(36).substring(2, 5);
-
           return {
                folder: "kreeya_media",
                public_id: `${seoFriendlyName}`,
                resource_type: "auto",
-               allowed_formats: ["jpg", "png", "jpeg", "webp", "mp4", "mov", "webm"]
+               allowed_formats: ["jpg", "png", "jpeg", "webp", "gif", "svg", "avif", "bmp", "ico", "mp4", "mov", "webm", "mkv"]
           };
      }
 });
