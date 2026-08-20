@@ -1,12 +1,19 @@
+import path from "path";
+import { fileURLToPath } from 'url';
 import dotenv from "dotenv";
-dotenv.config({ path: path.join(path.dirname(fileURLToPath(import.meta.url)), '.env') });
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+dotenv.config({ path: path.join(__dirname, '.env') });
+dotenv.config();
+
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import hpp from "hpp";
 import multer from "multer";
-import path from "path";
-import { fileURLToPath } from 'url';
+import mongoose from "mongoose";
 import connectDB from "./config/db.js";
 import { requireAdminForWrites } from "./middleware/adminAuth.js";
 import { autoDeployOnAdminChange } from "./middleware/autoDeploy.js";
@@ -30,9 +37,6 @@ import leadRoutes from "./routes/leadRoutes.js";
 import testimonialRoutes from "./routes/testimonialRoutes.js";
 import authorTemplateRoutes from "./routes/authorTemplateRoutes.js";
 import upload from "./middleware/multer.js";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -71,6 +75,7 @@ app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 app.use(hpp({ checkQuery: false }));
 app.use(sanitizeRequest);
 
+// Non-blocking DB connection
 connectDB();
 
 
