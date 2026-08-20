@@ -9,7 +9,6 @@ import path from "path";
 import { fileURLToPath } from 'url';
 import connectDB from "./config/db.js";
 import { requireAdminForWrites } from "./middleware/adminAuth.js";
-import { autoDeployOnAdminChange } from "./middleware/autoDeploy.js";
 import { sanitizeRequest } from "./middleware/security.js";
 import blogRoutes from "./routes/blogRoutes.js";
 import courseRoutes from "./routes/courseRoutes.js";
@@ -77,7 +76,6 @@ connectDB();
 
 // API auth guard for admin write access
 app.use("/api", requireAdminForWrites);
-app.use("/api", autoDeployOnAdminChange);
 
 // API Routes
 app.use("/api", userRoutes);
