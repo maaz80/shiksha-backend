@@ -12,6 +12,7 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import hpp from "hpp";
+import compression from "compression";
 import multer from "multer";
 import mongoose from "mongoose";
 import connectDB from "./config/db.js";
@@ -58,17 +59,18 @@ const allowedOrigins = [
 // CORS configuration
 app.use(cors({
      origin(origin, callback) {
-          if (!origin || allowedOrigins.includes(origin) || /\.netlify\.app$/.test(origin)) {
-               return callback(null, true);
-          }
-
-          return callback(new Error("Not allowed by CORS"));
+          return callback(null, true);
      },
+     credentials: true,
+     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "x-admin-api-key"]
 }));
 
 app.use(helmet({
      crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
+
+app.use(compression());
 
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
