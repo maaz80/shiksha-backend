@@ -53,6 +53,60 @@ const parseJSONField = (field) => {
      }
 };
 
+const processSectionFields = (body, files) => {
+     const sectionFields = {};
+
+     if (body.socialProof !== undefined) sectionFields.socialProof = parseJSONField(body.socialProof);
+     if (body.whyChooseUs !== undefined) sectionFields.whyChooseUs = parseJSONField(body.whyChooseUs);
+     if (body.chooseLearning !== undefined) sectionFields.chooseLearning = parseJSONField(body.chooseLearning);
+     if (body.benefitsCards !== undefined) sectionFields.benefitsCards = parseJSONField(body.benefitsCards);
+     if (body.benefitsTag !== undefined) sectionFields.benefitsTag = body.benefitsTag;
+     if (body.benefitsTitle !== undefined) sectionFields.benefitsTitle = body.benefitsTitle;
+     if (body.benefitsSubtitle !== undefined) sectionFields.benefitsSubtitle = body.benefitsSubtitle;
+     if (body.skillsYouWillLearn !== undefined) sectionFields.skillsYouWillLearn = parseJSONField(body.skillsYouWillLearn);
+     if (body.whoShouldEnroll !== undefined) sectionFields.whoShouldEnroll = parseJSONField(body.whoShouldEnroll);
+     if (body.jobRoles !== undefined) sectionFields.jobRoles = parseJSONField(body.jobRoles);
+
+     let hiringPartners = parseJSONField(body.hiringPartners);
+     if (hiringPartners && Array.isArray(hiringPartners.items) && Array.isArray(files)) {
+          files.forEach(file => {
+               const match = file.fieldname.match(/^hiringPartner_(\d+)$/);
+               if (match) {
+                    const idx = parseInt(match[1], 10);
+                    if (hiringPartners.items[idx]) {
+                         hiringPartners.items[idx].image = file.path;
+                    }
+               }
+          });
+     }
+     if (hiringPartners !== undefined) sectionFields.hiringPartners = hiringPartners;
+
+     let trainers = parseJSONField(body.trainers);
+     if (trainers && Array.isArray(trainers.items) && Array.isArray(files)) {
+          files.forEach(file => {
+               const match = file.fieldname.match(/^trainer_(\d+)$/);
+               if (match) {
+                    const idx = parseInt(match[1], 10);
+                    if (trainers.items[idx]) {
+                         trainers.items[idx].image = file.path;
+                    }
+               }
+          });
+     }
+     if (trainers !== undefined) sectionFields.trainers = trainers;
+
+     if (body.certificationTitle !== undefined) sectionFields.certificationTitle = body.certificationTitle;
+     if (body.certificationSubtitle !== undefined) sectionFields.certificationSubtitle = body.certificationSubtitle;
+     if (body.certificationBullets !== undefined) sectionFields.certificationBullets = parseJSONField(body.certificationBullets);
+
+     const certImg = (Array.isArray(files) ? files.find(f => f.fieldname === "certificationImage")?.path : undefined) || body.certificationImage;
+     if (certImg) sectionFields.certificationImage = certImg;
+
+     if (body.readyToStartJourney !== undefined) sectionFields.readyToStartJourney = parseJSONField(body.readyToStartJourney);
+
+     return sectionFields;
+};
+
 // CREATE
 export const createCourse = async (req, res) => {
      try {
@@ -98,8 +152,11 @@ export const createCourse = async (req, res) => {
                rawVideos = [];
           }
 
+          const dynamicSectionData = processSectionFields(req.body, req.files);
+
           const course = new Course({
                ...req.body,
+               ...dynamicSectionData,
                slug,
                sections: parsedSections,
                faq: parsedFaq,
@@ -178,6 +235,9 @@ export const getCourse = async (req, res) => {
 export const updateCourse = async (req, res) => {
      try {
           const updateData = { ...req.body };
+
+          const dynamicSectionData = processSectionFields(req.body, req.files);
+          Object.assign(updateData, dynamicSectionData);
 
           if (req.body.sections) {
                updateData.sections = parseSections(req.body.sections);
