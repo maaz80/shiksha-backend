@@ -33,6 +33,7 @@ const courseSchema = new mongoose.Schema({
      overview: String,
 
      fees: String,
+     price: Number,
      deadline: String,
 
      sections: [sectionSchema], // curriculum

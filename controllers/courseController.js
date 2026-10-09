@@ -154,6 +154,12 @@ export const createCourse = async (req, res) => {
 
           const dynamicSectionData = processSectionFields(req.body, req.files);
 
+          const rawFees = req.body.fees || req.body.price;
+          if (rawFees !== undefined) {
+               req.body.fees = String(rawFees);
+               req.body.price = Number(String(rawFees || "").replace(/[^0-9.]/g, "")) || 0;
+          }
+
           const course = new Course({
                ...req.body,
                ...dynamicSectionData,
@@ -235,6 +241,12 @@ export const getCourse = async (req, res) => {
 export const updateCourse = async (req, res) => {
      try {
           const updateData = { ...req.body };
+
+          if (req.body.fees !== undefined || req.body.price !== undefined) {
+               const rawFees = req.body.fees !== undefined ? req.body.fees : req.body.price;
+               updateData.fees = String(rawFees);
+               updateData.price = Number(String(rawFees || "").replace(/[^0-9.]/g, "")) || 0;
+          }
 
           const dynamicSectionData = processSectionFields(req.body, req.files);
           Object.assign(updateData, dynamicSectionData);
