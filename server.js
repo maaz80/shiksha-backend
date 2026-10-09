@@ -37,6 +37,10 @@ import contactRoutes from "./routes/contactRoutes.js";
 import leadRoutes from "./routes/leadRoutes.js";
 import testimonialRoutes from "./routes/testimonialRoutes.js";
 import authorTemplateRoutes from "./routes/authorTemplateRoutes.js";
+import crmAuthRoutes from "./routes/crmAuthRoutes.js";
+import crmLeadRoutes from "./routes/crmLeadRoutes.js";
+import erpRoutes from "./routes/erpRoutes.js";
+import whatsappRoutes from "./routes/whatsappRoutes.js";
 import upload from "./middleware/multer.js";
 
 const app = express();
@@ -51,6 +55,8 @@ const allowedOrigins = [
      // "http://localhost:3000",
      // "http://10.145.7.198:5173",
      // "https://www.shikssha.netlify.app",
+     "https://shiksha-crm.netlify.app",
+     "https://shiksha-erp.netlify.app",
      "https://www.shikshadesign.com",
      "https://shikshadesign.com",
      ...(process.env.FRONTEND_URL ? process.env.FRONTEND_URL.split(",").map((origin) => origin.trim()) : []),
@@ -63,7 +69,15 @@ app.use(cors({
      },
      credentials: true,
      methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "x-admin-api-key"]
+     allowedHeaders: [
+          "Content-Type",
+          "Authorization",
+          "X-Requested-With",
+          "x-admin-api-key",
+          "x-erp-token",
+          "x-crm-token",
+          "x-auth-token"
+     ]
 }));
 
 app.use(helmet({
@@ -105,6 +119,16 @@ app.use("/api", contactRoutes);
 app.use("/api", leadRoutes);
 app.use("/api", testimonialRoutes);
 app.use("/api", authorTemplateRoutes);
+
+// CRM Module Routes
+app.use("/api/crm/auth", crmAuthRoutes);
+app.use("/api/crm/leads", crmLeadRoutes);
+
+// ERP Module Routes
+app.use("/api/erp", erpRoutes);
+
+// WhatsApp Meta Cloud API & Lead Automation Routes
+app.use("/api", whatsappRoutes);
 
 
 app.post("/api/upload", upload.single("image"), (req, res) => {

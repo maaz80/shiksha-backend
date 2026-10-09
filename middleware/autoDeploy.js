@@ -22,7 +22,11 @@ export const autoDeployOnAdminChange = (req, res, next) => {
           const reqPath = req.path.replace(/\/$/, "") || "/";
           const normalizedPath = reqPath.replace(/^\/api/, "") || "/";
 
-          if (!EXCLUDED_PATHS.has(reqPath) && !EXCLUDED_PATHS.has(normalizedPath)) {
+          const isCrmPath = reqPath.startsWith("/crm") || normalizedPath.startsWith("/crm") || req.originalUrl?.includes("/crm/");
+          const isErpPath = reqPath.startsWith("/erp") || normalizedPath.startsWith("/erp") || req.originalUrl?.includes("/erp/");
+          const isWhatsAppPath = reqPath.startsWith("/whatsapp") || normalizedPath.startsWith("/whatsapp") || req.originalUrl?.includes("/whatsapp");
+
+          if (!EXCLUDED_PATHS.has(reqPath) && !EXCLUDED_PATHS.has(normalizedPath) && !isCrmPath && !isErpPath && !isWhatsAppPath) {
                res.on("finish", () => {
                     if (res.statusCode >= 200 && res.statusCode < 300) {
                          console.log(`[AutoDeploy] Admin content modification detected (${req.method} ${req.originalUrl}). Dispatching GitHub build...`);

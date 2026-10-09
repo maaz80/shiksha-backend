@@ -1,6 +1,7 @@
 import Lead from "../models/Lead.js";
 import Course from "../models/Course.js";
 import { transporter } from "../config/mailer.js";
+import { ingestUnifiedLead } from "../services/leadService.js";
 
 export const submitLead = async (req, res) => {
      try {
@@ -81,6 +82,20 @@ export const submitLead = async (req, res) => {
                courseName: courseName || "General Website Inquiry"
           });
           await lead.save();
+
+          // 1.1 Ingest into Unified CRM System
+          try {
+               await ingestUnifiedLead({
+                    name: name.trim(),
+                    phone: phone || "",
+                    email: email.trim(),
+                    course: courseName || "General Website Inquiry",
+                    source: source || "Website Lead",
+                    initialNote: `[Website Form Submission]: Course "${courseName || 'General'}". Ingested from ${source || 'Website'}.`
+               });
+          } catch (crmErr) {
+               console.error("Error auto-ingesting lead into CRM:", crmErr.message);
+          }
 
           // 2. Send Syllabus Email to Student (User)
           if (syllabusHtml) {

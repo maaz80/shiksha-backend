@@ -14,7 +14,9 @@ const PUBLIC_WRITE_PATHS = new Set([
      "/auth/send-otp",
      "/auth/login-otp",
      "/auth/signup-otp",
-     "/leads"
+     "/leads",
+     "/whatsapp/webhook",
+     "/whatsapp/data-deletion"
 ]);
 
 const SAFE_METHODS = new Set([
@@ -127,7 +129,13 @@ export const requireAdminForWrites = (req, res, next) => {
           SAFE_METHODS.has(req.method) ||
           PUBLIC_WRITE_PATHS.has(requestPath) ||
           PUBLIC_WRITE_PATHS.has(originalPath) ||
-          PUBLIC_WRITE_PATHS.has(normalizedPath)
+          PUBLIC_WRITE_PATHS.has(normalizedPath) ||
+          requestPath.startsWith("/crm") ||
+          originalPath.startsWith("/api/crm") ||
+          normalizedPath.startsWith("/crm") ||
+          requestPath.startsWith("/erp") ||
+          originalPath.startsWith("/api/erp") ||
+          normalizedPath.startsWith("/erp")
      ) {
           return next();
      }
